@@ -1,0 +1,476 @@
+"""
+Market analyzer for identifying high-value opportunities.
+"""
+
+import logging
+import math
+import time
+from datetime import datetime, timedelta
+from typing import List, Optional
+
+from src.analyzers.models import AnalysisResult, MarketOpportunity, OpportunityScore
+from src.clients.news.models import NewsArticle
+from src.clients.polymarket.models import Market, MarketPrice
+from src.config.settings import settings
+
+logger = logging.getLogger(__name__)
+
+
+class MarketAnalyzer:
+    """
+    Analyzer for identifying market opportunities.
+    """
+    
+    def __init__(self):
+        """Initialize market analyzer."""
+        self.min_volume = settings.min_market_volume
+        self.min_spread = settings.min_probability_spread
+        
+    def analyze_markets(
+        self,
+        markets: List[Market],
+        market_prices: List[MarketPrice],
+        news_articles: List[NewsArticle]
+    ) -> AnalysisResult:
+        """
+        Analyze markets for opportunities.
+        
+        Args:
+            markets: List of markets to analyze
+            market_prices: List of market prices
+            news_articles: Related news articles
+            
+        Returns:
+            AnalysisResult: Analysis results
+        """
+        start_time = time.time()
+        opportunities = []
+        
+        # Create price lookup
+        price_lookup = {price.condition_id: price for price in market_prices}
+        
+        for market in markets:
+            try:
+                opportunity = self._analyze_single_market(
+                    market, 
+                    price_lookup.get(market.condition_id),
+                    news_articles
+                )
+                if opportunity:
+                    opportunities.append(opportunity)
+            except Exception as e:
+                logger.error(f"Error analyzing market {market.condition_id}: {e}")
+                continue
+                
+        analysis_duration = time.time() - start_time
+        
+        return AnalysisResult(
+            opportunities=opportunities,
+            total_markets_analyzed=len(markets),
+            analysis_duration_seconds=analysis_duration,
+            news_articles_processed=len(news_articles)
+        )
+        
+    def _analyze_single_market(
+        self,
+        market: Market,
+        price: Optional[MarketPrice],
+        news_articles: List[NewsArticle]
+    ) -> Optional[MarketOpportunity]:
+        """
+        Analyze a single market for opportunities.
+        
+        Args:
+            market: Market to analyze
+            price: Current market price
+            news_articles: Related news articles
+            
+        Returns:
+            Optional[MarketOpportunity]: Opportunity if found
+        """
+        if not price:
+            return None
+            
+        # Filter markets by volume threshold
+        if market.volume and market.volume < self.min_volume:
+            return None
+            
+        # Calculate fair price based on available information
+        fair_prices = self._calculate_fair_prices(market, news_articles)
+        if not fair_prices:
+            return None
+            
+        fair_yes_price, fair_no_price = fair_prices
+        
+        # Check if there's a significant opportunity
+        yes_opportunity = abs(fair_yes_price - price.yes_price)
+        no_opportunity = abs(fair_no_price - price.no_price)
+        
+        if max(yes_opportunity, no_opportunity) < self.min_spread:
+            return None
+            
+        # Determine recommended position
+        if yes_opportunity > no_opportunity:
+            recommended_position = "YES" if fair_yes_price > price.yes_price else "NO"
+            expected_return = (fair_yes_price - price.yes_price) / price.yes_price * 100
+        else:
+            recommended_position = "NO" if fair_no_price > price.no_price else "YES"
+            expected_return = (fair_no_price - price.no_price) / price.no_price * 100
+            
+        # Calculate scores
+        score = self._calculate_opportunity_score(
+            market, price, fair_yes_price, fair_no_price, news_articles
+        )
+        
+        # Find related news
+        related_news = self._find_related_news(market, news_articles)
+        
+        # Generate reasoning
+        reasoning = self._generate_reasoning(
+            market, price, fair_yes_price, fair_no_price, related_news
+        )
+        
+        return MarketOpportunity(
+            condition_id=market.condition_id,
+            question=market.question,
+            description=market.description,
+            category=market.category,
+            current_yes_price=price.yes_price,
+            current_no_price=price.no_price,
+            current_spread=price.spread,
+            volume=market.volume,
+            liquidity=market.liquidity,
+            fair_yes_price=fair_yes_price,
+            fair_no_price=fair_no_price,
+            expected_return=expected_return,
+            recommended_position=recommended_position,
+            score=score,
+            end_date=market.end_date_iso,
+            reasoning=reasoning,
+            related_news=[article.title for article in related_news[:3]]
+        )
+        
+    def _calculate_fair_prices(
+        self,
+        market: Market,
+        news_articles: List[NewsArticle]
+    ) -> Optional[tuple[float, float]]:
+        """
+        Calculate fair prices based on available information.
+        
+        This is a simplified implementation. In practice, this would involve
+        more sophisticated models considering:
+        - Historical data
+        - Market fundamentals
+        - News sentiment analysis
+        - Expert predictions
+        - Polling data (for political markets)
+        - Statistical models
+        
+        Args:
+            market: Market to analyze
+            news_articles: Related news articles
+            
+        Returns:
+            Optional[tuple[float, float]]: (fair_yes_price, fair_no_price) or None
+        """
+        # Basic fair value estimation
+        related_news = self._find_related_news(market, news_articles)
+        
+        # News sentiment adjustment
+        news_sentiment = self._analyze_news_sentiment(related_news)
+        
+        # Time decay factor (markets closer to resolution are more reliable)
+        time_factor = self._calculate_time_factor(market)
+        
+        # Base probability (start with 50/50)
+        base_probability = 0.5
+        
+        # Adjust based on news sentiment (-0.2 to +0.2)
+        sentiment_adjustment = news_sentiment * 0.2
+        
+        # Adjust based on market category knowledge
+        category_adjustment = self._get_category_adjustment(market)
+        
+        # Calculate fair probability
+        fair_probability = base_probability + sentiment_adjustment + category_adjustment
+        fair_probability = max(0.01, min(0.99, fair_probability))  # Clamp to reasonable range
+        
+        fair_yes_price = fair_probability
+        fair_no_price = 1.0 - fair_probability
+        
+        return fair_yes_price, fair_no_price
+        
+    def _analyze_news_sentiment(self, news_articles: List[NewsArticle]) -> float:
+        """
+        Analyze sentiment of news articles.
+        
+        Args:
+            news_articles: News articles to analyze
+            
+        Returns:
+            float: Sentiment score (-1 to 1)
+        """
+        if not news_articles:
+            return 0.0
+            
+        # Simple keyword-based sentiment analysis
+        positive_keywords = [
+            "success", "win", "victory", "positive", "good", "strong", 
+            "growth", "increase", "improve", "better", "up", "gain"
+        ]
+        negative_keywords = [
+            "fail", "lose", "defeat", "negative", "bad", "weak",
+            "decline", "decrease", "worse", "down", "loss", "drop"
+        ]
+        
+        total_sentiment = 0.0
+        article_count = 0
+        
+        for article in news_articles:
+            text = f"{article.title} {article.description or ''}".lower()
+            
+            positive_count = sum(1 for keyword in positive_keywords if keyword in text)
+            negative_count = sum(1 for keyword in negative_keywords if keyword in text)
+            
+            if positive_count > 0 or negative_count > 0:
+                article_sentiment = (positive_count - negative_count) / (positive_count + negative_count)
+                total_sentiment += article_sentiment
+                article_count += 1
+                
+        return total_sentiment / article_count if article_count > 0 else 0.0
+        
+    def _calculate_time_factor(self, market: Market) -> float:
+        """
+        Calculate time factor based on market end date.
+        
+        Args:
+            market: Market to analyze
+            
+        Returns:
+            float: Time factor (0-1, higher is better)
+        """
+        if not market.end_date_iso:
+            return 0.5  # Unknown end date
+            
+        days_until_end = (market.end_date_iso - datetime.now()).days
+        
+        if days_until_end <= 0:
+            return 0.0  # Market already ended
+        elif days_until_end <= 7:
+            return 1.0  # Very close to resolution
+        elif days_until_end <= 30:
+            return 0.8  # Reasonably close
+        elif days_until_end <= 90:
+            return 0.6  # Moderate time horizon
+        else:
+            return 0.3  # Long-term market
+            
+    def _get_category_adjustment(self, market: Market) -> float:
+        """
+        Get adjustment based on market category knowledge.
+        
+        Args:
+            market: Market to analyze
+            
+        Returns:
+            float: Category adjustment (-0.1 to 0.1)
+        """
+        if not market.category:
+            return 0.0
+            
+        category = market.category.lower()
+        
+        # Category-specific adjustments based on general knowledge
+        if "crypto" in category or "bitcoin" in category:
+            return 0.05  # Slightly bullish on crypto adoption
+        elif "election" in category or "politics" in category:
+            return 0.0   # Neutral on political outcomes
+        elif "climate" in category or "weather" in category:
+            return 0.02  # Slightly pessimistic on climate targets
+        elif "sports" in category:
+            return 0.0   # Neutral on sports outcomes
+        else:
+            return 0.0
+            
+    def _calculate_opportunity_score(
+        self,
+        market: Market,
+        price: MarketPrice,
+        fair_yes_price: float,
+        fair_no_price: float,
+        news_articles: List[NewsArticle]
+    ) -> OpportunityScore:
+        """
+        Calculate opportunity scoring.
+        
+        Args:
+            market: Market data
+            price: Current prices
+            fair_yes_price: Fair YES price
+            fair_no_price: Fair NO price
+            news_articles: Related news
+            
+        Returns:
+            OpportunityScore: Calculated scores
+        """
+        # Value score: How much potential profit
+        value_diff = max(
+            abs(fair_yes_price - price.yes_price),
+            abs(fair_no_price - price.no_price)
+        )
+        value_score = min(1.0, value_diff / 0.3)  # Normalize to 0-1
+        
+        # Confidence score: How confident we are in the analysis
+        confidence_factors = []
+        
+        # More news articles = higher confidence
+        if news_articles:
+            news_confidence = min(1.0, len(news_articles) / 10)
+            confidence_factors.append(news_confidence)
+            
+        # Time factor
+        time_factor = self._calculate_time_factor(market)
+        confidence_factors.append(time_factor)
+        
+        # Market maturity (higher volume = higher confidence)
+        if market.volume:
+            volume_confidence = min(1.0, market.volume / 10000)
+            confidence_factors.append(volume_confidence)
+            
+        confidence_score = sum(confidence_factors) / len(confidence_factors) if confidence_factors else 0.3
+        
+        # Volume score: Market liquidity
+        volume_score = 0.5
+        if market.volume:
+            volume_score = min(1.0, market.volume / 50000)
+            
+        # Time score: Time until resolution
+        time_score = self._calculate_time_factor(market)
+        
+        # News relevance score
+        related_news = self._find_related_news(market, news_articles)
+        news_relevance_score = min(1.0, len(related_news) / 5)
+        
+        return OpportunityScore(
+            value_score=value_score,
+            confidence_score=confidence_score,
+            volume_score=volume_score,
+            time_score=time_score,
+            news_relevance_score=news_relevance_score
+        )
+        
+    def _find_related_news(
+        self,
+        market: Market,
+        news_articles: List[NewsArticle]
+    ) -> List[NewsArticle]:
+        """
+        Find news articles related to the market.
+        
+        Args:
+            market: Market to find news for
+            news_articles: Available news articles
+            
+        Returns:
+            List[NewsArticle]: Related news articles
+        """
+        market_keywords = self._extract_market_keywords(market)
+        related = []
+        
+        for article in news_articles:
+            article_text = f"{article.title} {article.description or ''}".lower()
+            
+            # Check if any market keywords appear in the article
+            for keyword in market_keywords:
+                if keyword in article_text:
+                    related.append(article)
+                    break
+                    
+        return related
+        
+    def _extract_market_keywords(self, market: Market) -> List[str]:
+        """
+        Extract keywords from market question.
+        
+        Args:
+            market: Market to extract keywords from
+            
+        Returns:
+            List[str]: List of keywords
+        """
+        # Simple keyword extraction
+        question = market.question.lower()
+        
+        # Remove common words
+        stop_words = {
+            "will", "be", "the", "a", "an", "and", "or", "but", "in", "on", "at", "to", "for",
+            "of", "with", "by", "is", "are", "was", "were", "been", "have", "has", "had",
+            "do", "does", "did", "can", "could", "should", "would", "may", "might", "must"
+        }
+        
+        words = question.split()
+        keywords = [word.strip(".,!?;:") for word in words if word not in stop_words and len(word) > 2]
+        
+        return keywords[:10]  # Return top 10 keywords
+        
+    def _generate_reasoning(
+        self,
+        market: Market,
+        price: MarketPrice,
+        fair_yes_price: float,
+        fair_no_price: float,
+        related_news: List[NewsArticle]
+    ) -> str:
+        """
+        Generate human-readable reasoning for the analysis.
+        
+        Args:
+            market: Market data
+            price: Current prices
+            fair_yes_price: Fair YES price
+            fair_no_price: Fair NO price
+            related_news: Related news articles
+            
+        Returns:
+            str: Analysis reasoning
+        """
+        reasoning_parts = []
+        
+        # Price analysis
+        yes_diff = fair_yes_price - price.yes_price
+        no_diff = fair_no_price - price.no_price
+        
+        if abs(yes_diff) > abs(no_diff):
+            if yes_diff > 0:
+                reasoning_parts.append(f"YES appears undervalued by {yes_diff:.1%}")
+            else:
+                reasoning_parts.append(f"YES appears overvalued by {abs(yes_diff):.1%}")
+        else:
+            if no_diff > 0:
+                reasoning_parts.append(f"NO appears undervalued by {no_diff:.1%}")
+            else:
+                reasoning_parts.append(f"NO appears overvalued by {abs(no_diff):.1%}")
+                
+        # News context
+        if related_news:
+            reasoning_parts.append(f"Based on analysis of {len(related_news)} related news articles")
+            
+        # Volume context
+        if market.volume:
+            if market.volume > 10000:
+                reasoning_parts.append("High volume market with good liquidity")
+            elif market.volume > 1000:
+                reasoning_parts.append("Moderate volume market")
+            else:
+                reasoning_parts.append("Low volume market - higher risk")
+                
+        # Time context
+        if market.end_date_iso:
+            days_until_end = (market.end_date_iso - datetime.now()).days
+            if days_until_end <= 7:
+                reasoning_parts.append("Market resolves soon - higher confidence")
+            elif days_until_end > 90:
+                reasoning_parts.append("Long-term market - lower confidence")
+                
+        return ". ".join(reasoning_parts) + "."
