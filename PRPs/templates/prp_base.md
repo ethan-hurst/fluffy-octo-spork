@@ -14,15 +14,13 @@ Template optimized for AI agents to implement features with sufficient context a
 ---
 
 ## Goal
-[What needs to be built - be specific about the end state and desires]
+We are going to be creating a web scraper which will scrape the website polymarket.com for value and for high probability wins. This application will then provide output for high value plays that are found. The program will also scrape news sites for current events to investigate what new opportunities are coming onto the market. 
 
 ## Why
-- [Business value and user impact]
-- [Integration with existing features]
-- [Problems this solves and for whom]
+The business value that this provides is potentially passive income 
 
 ## What
-[User-visible behavior and technical requirements]
+At the start this should be a console app that will provide plays and the odds that the application believe are fair and what will actually eventuate. 
 
 ### Success Criteria
 - [ ] [Specific measurable outcomes]
