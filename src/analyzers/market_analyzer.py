@@ -9,7 +9,8 @@ from datetime import datetime, timedelta, timezone
 from typing import List, Optional
 
 from src.analyzers.models import AnalysisResult, MarketOpportunity, OpportunityScore
-from src.analyzers.fair_value_engine import FairValueEngine
+from src.analyzers.refined_simple_analyzer import RefinedSimpleAnalyzer
+from src.analyzers.simple_pattern_analyzer import SimpleOpportunity
 from src.analyzers.kelly_criterion import KellyCriterion
 from src.analyzers.backtesting import BacktestingEngine
 from src.clients.news.models import NewsArticle
@@ -28,7 +29,7 @@ class MarketAnalyzer:
         """Initialize market analyzer."""
         self.min_volume = settings.min_market_volume
         self.min_spread = settings.min_probability_spread
-        self.fair_value_engine = FairValueEngine()
+        self.pattern_analyzer = RefinedSimpleAnalyzer()
         self.kelly_criterion = KellyCriterion()
         self.backtesting_engine = BacktestingEngine()
         
@@ -101,60 +102,52 @@ class MarketAnalyzer:
         if market.volume and market.volume < self.min_volume:
             return None
             
-        # Calculate sophisticated fair prices using new engine
+        # Use simple pattern analyzer
         try:
-            fair_yes_price, fair_no_price, fair_value_reasoning = await self.fair_value_engine.calculate_fair_value(
-                market, news_articles
+            simple_opportunity = self.pattern_analyzer.analyze_market(
+                market, price
             )
+            
+            if not simple_opportunity:
+                return None
+                
+            # Only proceed if edge meets minimum threshold
+            if simple_opportunity.edge < self.min_spread:
+                return None
+                
+            # Calculate fair values based on the opportunity
+            fair_yes_price, fair_no_price = self.pattern_analyzer.calculate_fair_value(
+                simple_opportunity
+            )
+            
+            # Create reasoning from the simple pattern
+            fair_value_reasoning = (
+                f"Pattern: {simple_opportunity.pattern_type} | "
+                f"{simple_opportunity.reason} | "
+                f"Confidence: {simple_opportunity.confidence:.0%}"
+            )
+            
         except Exception as e:
-            logger.error(f"Fair value calculation failed for {market.condition_id}: {e}")
-            return None
-        
-        # Check if there's a significant opportunity
-        yes_opportunity = abs(fair_yes_price - price.yes_price)
-        no_opportunity = abs(fair_no_price - price.no_price)
-        
-        if max(yes_opportunity, no_opportunity) < self.min_spread:
+            logger.error(f"Pattern analysis failed for {market.condition_id}: {e}")
             return None
             
-        # Additional filter: Don't recommend if the opportunity would result in negative expected return
-        max_opportunity_value = max(yes_opportunity, no_opportunity)
-        if max_opportunity_value < 0.05:  # Less than 5% opportunity
-            return None
-            
-        # Calculate potential returns for both positions
-        yes_return = None
-        no_return = None
-        
-        if fair_yes_price > price.yes_price and price.yes_price > 0:
-            # YES is undervalued - potential profit from buying YES
-            yes_return = (fair_yes_price - price.yes_price) / price.yes_price * 100
-        
-        if fair_no_price > price.no_price and price.no_price > 0:
-            # NO is undervalued - potential profit from buying NO  
-            no_return = (fair_no_price - price.no_price) / price.no_price * 100
-            
-        # Choose the position with higher expected return
-        if yes_return and no_return:
-            if yes_return > no_return:
-                recommended_position = "YES"
-                expected_return = yes_return
-            else:
-                recommended_position = "NO"
-                expected_return = no_return
-        elif yes_return:
+        # Determine position from simple opportunity
+        if simple_opportunity.recommended_action in ["BUY_YES", "SELL_NO"]:
             recommended_position = "YES"
-            expected_return = yes_return
-        elif no_return:
-            recommended_position = "NO"
-            expected_return = no_return
+            cost = price.yes_price
+            expected_value = fair_yes_price * 1.0
+            expected_return = ((expected_value - cost) / cost * 100) if cost > 0 else 0
+            edge = simple_opportunity.edge
         else:
-            # No profitable opportunity found
-            return None
+            recommended_position = "NO"
+            cost = price.no_price
+            expected_value = fair_no_price * 1.0
+            expected_return = ((expected_value - cost) / cost * 100) if cost > 0 else 0
+            edge = simple_opportunity.edge
             
-        # Calculate scores
-        score = self._calculate_opportunity_score(
-            market, price, fair_yes_price, fair_no_price, news_articles
+        # Calculate scores based on simple opportunity
+        score = self._calculate_simple_opportunity_score(
+            market, price, simple_opportunity, news_articles
         )
         
         # Find related news
@@ -381,6 +374,43 @@ class MarketAnalyzer:
         else:
             return 0.0
             
+    def _calculate_simple_opportunity_score(
+        self,
+        market: Market,
+        price: MarketPrice,
+        opportunity: SimpleOpportunity,
+        news_articles: List[NewsArticle]
+    ) -> OpportunityScore:
+        """
+        Calculate scoring based on simple opportunity.
+        """
+        # Value score based on edge
+        value_score = min(1.0, opportunity.edge / 0.3)  # Normalize to 0-1
+        
+        # Confidence from the pattern analyzer
+        confidence_score = opportunity.confidence
+        
+        # Volume score
+        volume_score = 0.5
+        if market.volume:
+            volume_score = min(1.0, market.volume / 50000)
+            
+        # Time score
+        time_score = self._calculate_time_factor(market)
+        
+        # News relevance (reduced importance for simple patterns)
+        news_relevance_score = 0.3  # Default
+        if news_articles and opportunity.pattern_type == "NEWS_OVERREACTION":
+            news_relevance_score = 0.8
+            
+        return OpportunityScore(
+            value_score=value_score,
+            confidence_score=confidence_score,
+            volume_score=volume_score,
+            time_score=time_score,
+            news_relevance_score=news_relevance_score
+        )
+    
     def _calculate_opportunity_score(
         self,
         market: Market,

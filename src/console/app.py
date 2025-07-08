@@ -99,6 +99,8 @@ class PolymarketAnalyzerApp:
                 
             except KeyboardInterrupt:
                 break
+            except EOFError:
+                break
             except Exception as e:
                 self.display.print_error(f"Error processing command: {e}")
                 logger.exception("Error processing command")
