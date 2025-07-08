@@ -7,7 +7,7 @@ from datetime import datetime, timedelta
 from unittest.mock import patch, MagicMock, AsyncMock
 
 from src.analyzers.llm_news_analyzer import (
-    LLMNewsAnalyzer, NewsAnalysis, SourceCredibility
+    LLMNewsAnalyzer, MarketNewsAnalysis, NewsAnalysisResult
 )
 from src.clients.polymarket.models import Market
 from src.clients.news.models import NewsArticle

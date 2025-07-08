@@ -10,7 +10,7 @@ from src.analyzers.fair_value_engine import FairValueEngine, BaseRateData
 from src.clients.polymarket.models import Market
 from src.clients.news.models import NewsArticle
 from src.analyzers.bayesian_updater import ProbabilityDistribution
-from src.analyzers.llm_news_analyzer import NewsAnalysis
+from src.analyzers.llm_news_analyzer import MarketNewsAnalysis
 
 
 class TestFairValueEngine:

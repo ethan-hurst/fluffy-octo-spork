@@ -10,7 +10,7 @@ from src.analyzers.crypto_model import (
     CryptoFinancialModel, ETFApprovalStage, ETFApplication, 
     CryptoMarketData, FinancialIndicators
 )
-from src.clients.polymarket.models import Market
+from src.clients.polymarket.models import Market, Token
 from src.clients.news.models import NewsArticle
 from src.analyzers.bayesian_updater import ProbabilityDistribution
 
@@ -33,7 +33,12 @@ class TestCryptoFinancialModel:
                 active=True,
                 closed=False,
                 volume=500000.0,
-                end_date_iso=now + timedelta(days=180)
+                end_date_iso=now + timedelta(days=180),
+                tokens=[
+                    Token(token_id="yes_token", outcome="Yes", price=0.5),
+                    Token(token_id="no_token", outcome="No", price=0.5)
+                ],
+                minimum_order_size=1.0
             ),
             "eth_etf": Market(
                 condition_id="eth_etf_2024",
@@ -43,7 +48,12 @@ class TestCryptoFinancialModel:
                 active=True,
                 closed=False,
                 volume=300000.0,
-                end_date_iso=now + timedelta(days=120)
+                end_date_iso=now + timedelta(days=120),
+                tokens=[
+                    Token(token_id="yes_token", outcome="Yes", price=0.5),
+                    Token(token_id="no_token", outcome="No", price=0.5)
+                ],
+                minimum_order_size=1.0
             ),
             "btc_price": Market(
                 condition_id="btc_100k",
@@ -53,7 +63,12 @@ class TestCryptoFinancialModel:
                 active=True,
                 closed=False,
                 volume=750000.0,
-                end_date_iso=now + timedelta(days=60)
+                end_date_iso=now + timedelta(days=60),
+                tokens=[
+                    Token(token_id="yes_token", outcome="Yes", price=0.5),
+                    Token(token_id="no_token", outcome="No", price=0.5)
+                ],
+                minimum_order_size=1.0
             ),
             "crypto_regulation": Market(
                 condition_id="crypto_ban_2024",
@@ -63,7 +78,12 @@ class TestCryptoFinancialModel:
                 active=True,
                 closed=False,
                 volume=200000.0,
-                end_date_iso=now + timedelta(days=365)
+                end_date_iso=now + timedelta(days=365),
+                tokens=[
+                    Token(token_id="yes_token", outcome="Yes", price=0.5),
+                    Token(token_id="no_token", outcome="No", price=0.5)
+                ],
+                minimum_order_size=1.0
             )
         }
         
@@ -120,7 +140,7 @@ class TestCryptoFinancialModel:
         }
         
         # Create test technical indicators
-        self.technical_indicators = TechnicalIndicators(
+        self.technical_indicators = FinancialIndicators(
             rsi=58.0,
             macd_signal="bullish",
             bollinger_position="middle",
@@ -131,7 +151,7 @@ class TestCryptoFinancialModel:
         )
         
         # Create test regulatory sentiment
-        self.regulatory_sentiment = RegulatorySentiment(
+        self.regulatory_sentiment = dict(
             sec_stance="cautiously_positive",
             cftc_stance="neutral",
             fed_stance="concerned",
@@ -293,7 +313,7 @@ class TestCryptoFinancialModel:
         
     def test_get_technical_signal_strength_bullish(self):
         """Test technical signal strength for bullish indicators."""
-        bullish_indicators = TechnicalIndicators(
+        bullish_indicators = FinancialIndicators(
             rsi=45.0,  # Not overbought
             macd_signal="bullish",
             bollinger_position="lower",  # Room to grow
@@ -308,7 +328,7 @@ class TestCryptoFinancialModel:
         
     def test_get_technical_signal_strength_bearish(self):
         """Test technical signal strength for bearish indicators."""
-        bearish_indicators = TechnicalIndicators(
+        bearish_indicators = FinancialIndicators(
             rsi=75.0,  # Overbought
             macd_signal="bearish",
             bollinger_position="upper",  # At resistance
@@ -382,7 +402,7 @@ class TestCryptoFinancialModel:
         
     def test_get_volatility_adjustment_high_volatility(self):
         """Test volatility adjustment for high volatility."""
-        high_vol_indicators = TechnicalIndicators(
+        high_vol_indicators = FinancialIndicators(
             rsi=50.0,
             macd_signal="neutral",
             bollinger_position="middle",
@@ -397,7 +417,7 @@ class TestCryptoFinancialModel:
         
     def test_get_volatility_adjustment_low_volatility(self):
         """Test volatility adjustment for low volatility."""
-        low_vol_indicators = TechnicalIndicators(
+        low_vol_indicators = FinancialIndicators(
             rsi=50.0,
             macd_signal="neutral",
             bollinger_position="middle",
@@ -504,8 +524,8 @@ class TestCryptoFinancialModel:
         assert data.rsi == 50.0
         
     def test_technical_indicators_creation(self):
-        """Test TechnicalIndicators dataclass creation."""
-        indicators = TechnicalIndicators(
+        """Test FinancialIndicators dataclass creation."""
+        indicators = FinancialIndicators(
             rsi=50.0,
             macd_signal="neutral",
             bollinger_position="middle",
@@ -522,8 +542,8 @@ class TestCryptoFinancialModel:
         assert indicators.momentum_score == 0.5
         
     def test_regulatory_sentiment_creation(self):
-        """Test RegulatorySentiment dataclass creation."""
-        sentiment = RegulatorySentiment(
+        """Test dict dataclass creation."""
+        sentiment = dict(
             sec_stance="neutral",
             cftc_stance="positive",
             fed_stance="negative",
