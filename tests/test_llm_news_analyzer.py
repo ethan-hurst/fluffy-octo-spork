@@ -9,8 +9,8 @@ from unittest.mock import patch, MagicMock, AsyncMock
 from src.analyzers.llm_news_analyzer import (
     LLMNewsAnalyzer, MarketNewsAnalysis, NewsAnalysisResult
 )
-from src.clients.polymarket.models import Market
-from src.clients.news.models import NewsArticle
+from src.clients.polymarket.models import Market, Token
+from src.clients.news.models import NewsArticle, NewsSource
 
 
 class TestLLMNewsAnalyzer:
@@ -30,7 +30,12 @@ class TestLLMNewsAnalyzer:
             active=True,
             closed=False,
             volume=1000000.0,
-            end_date_iso=now + timedelta(days=300)
+            end_date_iso=now + timedelta(days=300),
+            tokens=[
+                Token(token_id="yes_token", outcome="Yes", price=0.5),
+                Token(token_id="no_token", outcome="No", price=0.5)
+            ],
+            minimum_order_size=1.0
         )
         
         # Create test news articles
@@ -47,21 +52,21 @@ class TestLLMNewsAnalyzer:
                 description="President's reelection campaign reports unprecedented donor enthusiasm and financial support",
                 url="https://example.com/biden-fundraising",
                 published_at=now - timedelta(hours=1),
-                source="Associated Press"
+                source=NewsSource(name="Associated Press")
             ),
             NewsArticle(
                 title="Election Security Measures Enhanced",
                 description="States implement new voting technology and verification systems for upcoming election",
                 url="https://example.com/election-security",
                 published_at=now - timedelta(hours=3),
-                source="Washington Post"
+                source=NewsSource(name="Washington Post")
             ),
             NewsArticle(
                 title="Partisan Blog Claims Election Fraud",
                 description="Unverified claims about voting irregularities spread on social media",
                 url="https://example.com/partisan-blog",
                 published_at=now - timedelta(hours=4),
-                source="Unknown Blog"
+                source=NewsSource(name="Unknown Blog")
             )
         ]
         

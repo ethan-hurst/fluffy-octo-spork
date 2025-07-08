@@ -7,8 +7,8 @@ from datetime import datetime, timedelta
 from unittest.mock import patch, MagicMock, AsyncMock
 
 from src.analyzers.fair_value_engine import FairValueEngine, BaseRateData
-from src.clients.polymarket.models import Market
-from src.clients.news.models import NewsArticle
+from src.clients.polymarket.models import Market, Token
+from src.clients.news.models import NewsArticle, NewsSource
 from src.analyzers.bayesian_updater import ProbabilityDistribution
 from src.analyzers.llm_news_analyzer import MarketNewsAnalysis
 
@@ -31,7 +31,12 @@ class TestFairValueEngine:
                 active=True,
                 closed=False,
                 volume=1000000.0,
-                end_date_iso=now + timedelta(days=300)
+                end_date_iso=now + timedelta(days=300),
+                tokens=[
+                    Token(token_id="yes_token", outcome="Yes", price=0.5),
+                    Token(token_id="no_token", outcome="No", price=0.5)
+                ],
+                minimum_order_size=1.0
             ),
             "btc_etf": Market(
                 condition_id="btc_etf_2024", 
@@ -41,7 +46,12 @@ class TestFairValueEngine:
                 active=True,
                 closed=False,
                 volume=500000.0,
-                end_date_iso=now + timedelta(days=180)
+                end_date_iso=now + timedelta(days=180),
+                tokens=[
+                    Token(token_id="yes_token", outcome="Yes", price=0.5),
+                    Token(token_id="no_token", outcome="No", price=0.5)
+                ],
+                minimum_order_size=1.0
             ),
             "constitutional_amendment": Market(
                 condition_id="term_limits_2024",
@@ -51,7 +61,12 @@ class TestFairValueEngine:
                 active=True,
                 closed=False,
                 volume=100000.0,
-                end_date_iso=now + timedelta(days=365)
+                end_date_iso=now + timedelta(days=365),
+                tokens=[
+                    Token(token_id="yes_token", outcome="Yes", price=0.5),
+                    Token(token_id="no_token", outcome="No", price=0.5)
+                ],
+                minimum_order_size=1.0
             ),
             "nfl_coaching": Market(
                 condition_id="coach_fire_2024",
@@ -61,7 +76,12 @@ class TestFairValueEngine:
                 active=True,
                 closed=False,
                 volume=200000.0,
-                end_date_iso=now + timedelta(days=120)
+                end_date_iso=now + timedelta(days=120),
+                tokens=[
+                    Token(token_id="yes_token", outcome="Yes", price=0.5),
+                    Token(token_id="no_token", outcome="No", price=0.5)
+                ],
+                minimum_order_size=1.0
             ),
             "multi_party_election": Market(
                 condition_id="japan_ldp_2024",
@@ -71,7 +91,12 @@ class TestFairValueEngine:
                 active=True,
                 closed=False,
                 volume=300000.0,
-                end_date_iso=now + timedelta(days=200)
+                end_date_iso=now + timedelta(days=200),
+                tokens=[
+                    Token(token_id="yes_token", outcome="Yes", price=0.5),
+                    Token(token_id="no_token", outcome="No", price=0.5)
+                ],
+                minimum_order_size=1.0
             )
         }
         
@@ -82,14 +107,14 @@ class TestFairValueEngine:
                 description="Former president showing strength in key swing states",
                 url="https://example.com/trump-leads",
                 published_at=now - timedelta(hours=2),
-                source="Reuters"
+                source=NewsSource(name="Reuters")
             ),
             NewsArticle(
                 title="SEC Chairman Signals ETF Openness",
                 description="Regulatory head indicates willingness to approve crypto products",
                 url="https://example.com/sec-etf",
                 published_at=now - timedelta(hours=1),
-                source="Bloomberg"
+                source=NewsSource(name="Bloomberg")
             )
         ]
         
@@ -473,7 +498,7 @@ class TestFairValueEngine:
                 description="Strong approval and good news for the outcome",
                 url="https://example.com/positive",
                 published_at=datetime.now(),
-                source="Reuters"
+                source=NewsSource(name="Reuters")
             )
         ]
         
@@ -493,7 +518,7 @@ class TestFairValueEngine:
                 description="Strong growth and positive improvement seen",
                 url="https://example.com/positive",
                 published_at=datetime.now(),
-                source="Reuters"
+                source=NewsSource(name="Reuters")
             )
         ]
         
@@ -508,7 +533,7 @@ class TestFairValueEngine:
                 description="Bad news with negative decline and loss",
                 url="https://example.com/negative",
                 published_at=datetime.now(),
-                source="Reuters"
+                source=NewsSource(name="Reuters")
             )
         ]
         
@@ -523,7 +548,7 @@ class TestFairValueEngine:
                 description="Standard information about current conditions",
                 url="https://example.com/neutral",
                 published_at=datetime.now(),
-                source="Reuters"
+                source=NewsSource(name="Reuters")
             )
         ]
         

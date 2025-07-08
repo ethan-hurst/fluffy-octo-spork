@@ -11,7 +11,7 @@ from src.analyzers.fair_value_engine import FairValueEngine
 from src.clients.polymarket.client import PolymarketClient
 from src.clients.news.client import NewsClient
 from src.clients.polymarket.models import Market, Token, MarketPrice
-from src.clients.news.models import NewsArticle
+from src.clients.news.models import NewsArticle, NewsSource
 from src.analyzers.bayesian_updater import ProbabilityDistribution
 from src.analyzers.llm_news_analyzer import MarketNewsAnalysis
 
@@ -39,7 +39,12 @@ class TestSystemIntegration:
                 active=True,
                 closed=False,
                 volume=2500000.0,
-                end_date_iso=now + timedelta(days=300)
+                end_date_iso=now + timedelta(days=300),
+                tokens=[
+                    Token(token_id="yes_token", outcome="Yes", price=0.5),
+                    Token(token_id="no_token", outcome="No", price=0.5)
+                ],
+                minimum_order_size=1.0
             ),
             Market(
                 condition_id="btc_etf_approval",
@@ -49,7 +54,12 @@ class TestSystemIntegration:
                 active=True,
                 closed=False,
                 volume=1800000.0,
-                end_date_iso=now + timedelta(days=120)
+                end_date_iso=now + timedelta(days=120),
+                tokens=[
+                    Token(token_id="yes_token", outcome="Yes", price=0.5),
+                    Token(token_id="no_token", outcome="No", price=0.5)
+                ],
+                minimum_order_size=1.0
             ),
             Market(
                 condition_id="nfl_coaching_change",
@@ -59,7 +69,12 @@ class TestSystemIntegration:
                 active=True,
                 closed=False,
                 volume=750000.0,
-                end_date_iso=now + timedelta(days=90)
+                end_date_iso=now + timedelta(days=90),
+                tokens=[
+                    Token(token_id="yes_token", outcome="Yes", price=0.5),
+                    Token(token_id="no_token", outcome="No", price=0.5)
+                ],
+                minimum_order_size=1.0
             ),
             Market(
                 condition_id="constitutional_amendment",
@@ -69,7 +84,12 @@ class TestSystemIntegration:
                 active=True,
                 closed=False,
                 volume=150000.0,
-                end_date_iso=now + timedelta(days=365)
+                end_date_iso=now + timedelta(days=365),
+                tokens=[
+                    Token(token_id="yes_token", outcome="Yes", price=0.5),
+                    Token(token_id="no_token", outcome="No", price=0.5)
+                ],
+                minimum_order_size=1.0
             )
         ]
         
@@ -80,28 +100,28 @@ class TestSystemIntegration:
                 description="Latest polling shows former president ahead in critical battleground states",
                 url="https://example.com/trump-polling-lead",
                 published_at=now - timedelta(hours=2),
-                source="Reuters"
+                source=NewsSource(name="Reuters")
             ),
             NewsArticle(
                 title="SEC Chairman Signals Crypto ETF Approval",
                 description="Regulatory chief indicates positive outlook for Bitcoin ETF applications",
                 url="https://example.com/sec-crypto-etf",
                 published_at=now - timedelta(hours=1),
-                source="Bloomberg"
+                source=NewsSource(name="Bloomberg")
             ),
             NewsArticle(
                 title="Jets Coach Under Intense Pressure After Loss",
                 description="Team performance raises questions about coaching staff future",
                 url="https://example.com/jets-coach-pressure",
                 published_at=now - timedelta(hours=3),
-                source="ESPN"
+                source=NewsSource(name="ESPN")
             ),
             NewsArticle(
                 title="Constitutional Scholars Debate Term Limits",
                 description="Legal experts discuss feasibility of constitutional amendments",
                 url="https://example.com/constitutional-debate",
                 published_at=now - timedelta(hours=4),
-                source="Washington Post"
+                source=NewsSource(name="Washington Post")
             )
         ]
         
@@ -299,7 +319,7 @@ class TestSystemIntegration:
                 strength=0.7,
                 confidence=0.8,
                 description="Strong polling support",
-                source="polling_aggregator"
+                source=NewsSource(name="polling_aggregator")
             ),
             updater.create_evidence(
                 evidence_type=EvidenceType.NEWS_SENTIMENT,
@@ -307,7 +327,7 @@ class TestSystemIntegration:
                 strength=0.5,
                 confidence=0.6,
                 description="Positive news coverage",
-                source="news_analyzer"
+                source=NewsSource(name="news_analyzer")
             ),
             updater.create_evidence(
                 evidence_type=EvidenceType.MARKET_BEHAVIOR,
@@ -315,7 +335,7 @@ class TestSystemIntegration:
                 strength=0.3,
                 confidence=0.5,
                 description="Some market resistance",
-                source="market_analysis"
+                source=NewsSource(name="market_analysis")
             )
         ]
         
@@ -416,7 +436,12 @@ class TestSystemIntegration:
             active=True,
             closed=False,
             volume=-1000.0,  # Negative volume
-            end_date_iso=datetime.now() - timedelta(days=1)  # Past date
+            end_date_iso=datetime.now() - timedelta(days=1),  # Past date
+            tokens=[
+                Token(token_id="yes_token", outcome="Yes", price=0.5),
+                Token(token_id="no_token", outcome="No", price=0.5)
+            ],
+            minimum_order_size=1.0
         )
         
         # System should handle invalid data gracefully

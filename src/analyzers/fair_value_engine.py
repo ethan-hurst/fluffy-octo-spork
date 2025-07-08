@@ -560,6 +560,16 @@ class FairValueEngine:
             "global warming", "sea level", "ice", "record high", "record low"
         ])
         
+    def _is_technology_event(self, market: Market) -> bool:
+        """Check if this is a technology event."""
+        question = market.question.lower()
+        return any(term in question for term in [
+            "technology", "tech", "software", "hardware", "ai", "artificial intelligence",
+            "launch", "release", "product", "acquisition", "merger", "ipo",
+            "adoption", "users", "download", "install", "upgrade", "version",
+            "patent", "innovation", "breakthrough", "development", "announcement"
+        ])
+        
     def _calculate_weather_climate_probability(self, market: Market) -> Tuple[float, str]:
         """Calculate probability for weather/climate events."""
         question = market.question.lower()
@@ -585,6 +595,36 @@ class FairValueEngine:
             return 0.40, "Climate milestones on current trajectories (~40%)"
             
         return 0.25, "Generic weather event baseline (25%)"
+        
+    def _calculate_technology_probability(self, market: Market) -> Tuple[float, str]:
+        """Calculate probability for technology events."""
+        question = market.question.lower()
+        
+        # Product launches
+        if any(term in question for term in ["launch", "release", "announce"]):
+            if "delay" in question:
+                return 0.3, "Tech product delays are common in the industry (30% baseline)"
+            return 0.6, "Major tech product launches typically meet announced dates (60% baseline)"
+            
+        # Acquisitions/Mergers
+        if any(term in question for term in ["acquire", "acquisition", "merger", "buy"]):
+            if "regulatory" in question or "approval" in question:
+                return 0.7, "Tech M&A with regulatory scrutiny has mixed success (70% baseline)"
+            return 0.4, "Tech M&A deals often face unexpected challenges (40% baseline)"
+            
+        # Adoption milestones
+        if any(term in question for term in ["users", "downloads", "adoption", "reach"]):
+            if "billion" in question:
+                return 0.2, "Reaching billion-user milestones is extremely rare (20% baseline)"
+            if "million" in question:
+                return 0.5, "Million-user milestones depend heavily on product quality (50% baseline)"
+            
+        # IPOs
+        if "ipo" in question:
+            return 0.3, "Tech IPOs often get delayed or cancelled due to market conditions (30% baseline)"
+            
+        # Generic technology event
+        return 0.5, "Technology market outcomes vary widely - need specific industry data (50% baseline)"
         
     def _is_corporate_event(self, market: Market) -> bool:
         """Check if this is a corporate/business event."""
