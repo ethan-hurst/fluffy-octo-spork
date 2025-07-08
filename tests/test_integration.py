@@ -125,31 +125,17 @@ class TestSystemIntegration:
             )
         ]
         
-        # Test market data
-        self.test_orderbook = OrderBook(
-            market="trump_2024_election",
-            asset_id="trump_yes_token",
-            bids=[
-                Order(price=0.47, size=5000.0, side=OrderSide.BID),
-                Order(price=0.46, size=8000.0, side=OrderSide.BID),
-                Order(price=0.45, size=12000.0, side=OrderSide.BID)
-            ],
-            asks=[
-                Order(price=0.53, size=6000.0, side=OrderSide.ASK),
-                Order(price=0.54, size=9000.0, side=OrderSide.ASK),
-                Order(price=0.55, size=10000.0, side=OrderSide.ASK)
-            ]
-        )
-        
-        self.test_market_stats = MarketStats(
-            condition_id="trump_2024_election",
-            volume_24h=125000.0,
-            price_change_24h=0.023,
-            last_trade_price=0.495,
-            bid=0.47,
-            ask=0.53,
-            trades_24h=450
-        )
+        # Test market data - using simple mock data instead of non-existent classes
+        self.test_market_data = {
+            "market": "trump_2024_election",
+            "asset_id": "trump_yes_token",
+            "bid": 0.47,
+            "ask": 0.53,
+            "volume_24h": 125000.0,
+            "price_change_24h": 0.023,
+            "last_trade_price": 0.495,
+            "trades_24h": 450
+        }
         
     @pytest.mark.asyncio
     async def test_complete_market_analysis_workflow(self):
@@ -157,35 +143,50 @@ class TestSystemIntegration:
         
         # Mock all external dependencies
         with patch.object(self.polymarket_client, 'get_markets', new_callable=AsyncMock) as mock_get_markets:
-            with patch.object(self.news_client, 'search_news', new_callable=AsyncMock) as mock_search_news:
-                with patch.object(self.polymarket_client, 'get_orderbook', new_callable=AsyncMock) as mock_get_orderbook:
-                    with patch.object(self.polymarket_client, 'get_market_stats', new_callable=AsyncMock) as mock_get_stats:
+            with patch.object(self.news_client, 'get_relevant_news', new_callable=AsyncMock) as mock_search_news:
+                with patch.object(self.polymarket_client, 'get_market_prices', new_callable=AsyncMock) as mock_get_prices:
+                    # Setup mocks
+                    mock_get_markets.return_value = self.test_markets
+                    mock_search_news.return_value = self.test_news_articles
+                    
+                    # Mock market prices for each market
+                    market_prices = []
+                    for market in self.test_markets:
+                        price = MarketPrice(
+                            condition_id=market.condition_id,
+                            yes_price=0.5,
+                            no_price=0.5,
+                            volume_24h=market.volume,
+                            liquidity=50000.0
+                        )
+                        market_prices.append(price)
+                        mock_get_prices.return_value = price
+                    
+                    # Execute complete workflow
+                    result = await self.market_analyzer.analyze_markets(
+                        self.test_markets,
+                        market_prices,
+                        self.test_news_articles
+                    )
+                    
+                    # Verify results
+                    assert hasattr(result, 'opportunities')
+                    opportunities = result.opportunities
+                    assert isinstance(opportunities, list)
+                    assert len(opportunities) > 0
+                    
+                    # Check that opportunities contain required fields
+                    for opportunity in opportunities:
+                        assert hasattr(opportunity, 'market')
+                        assert hasattr(opportunity, 'fair_yes_price')
+                        assert hasattr(opportunity, 'fair_no_price')
+                        assert hasattr(opportunity, 'current_price')
+                        assert hasattr(opportunity, 'value_score')
+                        assert hasattr(opportunity, 'reasoning')
                         
-                        # Setup mocks
-                        mock_get_markets.return_value = self.test_markets
-                        mock_search_news.return_value = self.test_news_articles
-                        mock_get_orderbook.return_value = self.test_orderbook
-                        mock_get_stats.return_value = self.test_market_stats
-                        
-                        # Execute complete workflow
-                        opportunities = await self.market_analyzer.analyze_markets()
-                        
-                        # Verify results
-                        assert isinstance(opportunities, list)
-                        assert len(opportunities) > 0
-                        
-                        # Check that opportunities contain required fields
-                        for opportunity in opportunities:
-                            assert hasattr(opportunity, 'market')
-                            assert hasattr(opportunity, 'fair_yes_price')
-                            assert hasattr(opportunity, 'fair_no_price')
-                            assert hasattr(opportunity, 'current_price')
-                            assert hasattr(opportunity, 'value_score')
-                            assert hasattr(opportunity, 'reasoning')
-                            
-                        # Verify external calls were made
-                        mock_get_markets.assert_called_once()
-                        assert mock_search_news.call_count >= 1
+                    # Verify external calls were made
+                    mock_get_markets.assert_called_once()
+                    assert mock_search_news.call_count >= 1
                         
     @pytest.mark.asyncio
     async def test_political_market_end_to_end(self):
@@ -283,16 +284,15 @@ class TestSystemIntegration:
         news = self.test_news_articles[:2]  # Mixed news
         
         # Mock LLM news analysis
-        mock_analysis = NewsAnalysis(
+        mock_analysis = MarketNewsAnalysis(
             overall_sentiment=0.15,
             sentiment_confidence=0.8,
             news_impact_score=0.7,
             credible_sources_count=2,
-            total_sources_count=2,
+            total_articles_analyzed=2,
             probability_adjustment=0.03,
-            key_insights=["Positive polling trend", "Strong media coverage"],
-            confidence_factors=["Multiple credible sources", "Recent data"],
-            uncertainty_factors=["Early in election cycle"]
+            key_findings=["Positive polling trend", "Strong media coverage"],
+            reasoning="Based on multiple credible sources and recent data"
         )
         
         with patch.object(self.fair_value_engine.llm_news_analyzer, 'analyze_market_news', new_callable=AsyncMock) as mock_llm:
@@ -391,7 +391,7 @@ class TestSystemIntegration:
                 
         # Test with partial data availability
         with patch.object(self.polymarket_client, 'get_markets', new_callable=AsyncMock) as mock_markets:
-            with patch.object(self.news_client, 'search_news', new_callable=AsyncMock) as mock_news:
+            with patch.object(self.news_client, 'get_relevant_news', new_callable=AsyncMock) as mock_news:
                 mock_markets.return_value = self.test_markets[:2]  # Partial market data
                 mock_news.return_value = []  # No news available
                 
@@ -407,7 +407,7 @@ class TestSystemIntegration:
         large_market_set = self.test_markets * 5  # 20 markets total
         
         with patch.object(self.polymarket_client, 'get_markets', new_callable=AsyncMock) as mock_markets:
-            with patch.object(self.news_client, 'search_news', new_callable=AsyncMock) as mock_news:
+            with patch.object(self.news_client, 'get_relevant_news', new_callable=AsyncMock) as mock_news:
                 mock_markets.return_value = large_market_set
                 mock_news.return_value = self.test_news_articles
                 
@@ -495,7 +495,7 @@ class TestSystemIntegration:
         
         # Mock all components for a complete test
         with patch.object(self.polymarket_client, 'get_markets', new_callable=AsyncMock) as mock_markets:
-            with patch.object(self.news_client, 'search_news', new_callable=AsyncMock) as mock_news:
+            with patch.object(self.news_client, 'get_relevant_news', new_callable=AsyncMock) as mock_news:
                 with patch.object(self.polymarket_client, 'get_orderbook', new_callable=AsyncMock) as mock_orderbook:
                     with patch.object(self.polymarket_client, 'get_market_stats', new_callable=AsyncMock) as mock_stats:
                         
