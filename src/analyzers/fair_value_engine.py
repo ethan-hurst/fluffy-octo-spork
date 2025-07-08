@@ -16,6 +16,7 @@ from src.analyzers.market_categorizer import MarketCategorizer
 from src.analyzers.bayesian_updater import BayesianUpdater, Evidence, EvidenceType
 from src.analyzers.political_model import PoliticalMarketModel
 from src.analyzers.crypto_model import CryptoFinancialModel
+from src.analyzers.sports_model import SportsMarketModel
 
 logger = logging.getLogger(__name__)
 
@@ -45,6 +46,7 @@ class FairValueEngine:
         self.bayesian_updater = BayesianUpdater()
         self.political_model = PoliticalMarketModel()
         self.crypto_model = CryptoFinancialModel()
+        self.sports_model = SportsMarketModel()
         
     async def calculate_fair_value(
         self, 
