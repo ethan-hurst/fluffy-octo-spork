@@ -5,7 +5,7 @@ Advanced entertainment and awards market modeling.
 import re
 import logging
 import statistics
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Dict, List, Optional, Tuple, Set
 from dataclasses import dataclass
 from enum import Enum
@@ -741,7 +741,12 @@ class EntertainmentMarketModel:
             
         # Calculate trajectory
         if movie_data.release_date:
-            days_in_release = (datetime.now() - movie_data.release_date).days
+            # Ensure timezone-aware comparison
+            now = datetime.now(timezone.utc)
+            release_date = movie_data.release_date
+            if release_date.tzinfo is None:
+                release_date = release_date.replace(tzinfo=timezone.utc)
+            days_in_release = (now - release_date).days
             if days_in_release > 0:
                 daily_average = movie_data.current_revenue / days_in_release
                 projected_total = daily_average * 90  # Typical theatrical window

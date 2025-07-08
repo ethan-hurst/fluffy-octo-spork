@@ -89,9 +89,12 @@ class APIRateLimiters:
             period_seconds=settings.rate_limit_period
         )
         
+        # NewsAPI free tier is much more restrictive
+        # Free tier: 100 requests per day, but also has burst limits
+        # Let's be conservative: 1 request per 2 seconds
         self.newsapi = RateLimiter(
-            calls_per_period=1000,  # NewsAPI allows 1000 requests per day
-            period_seconds=86400    # 24 hours
+            calls_per_period=1,     # 1 request
+            period_seconds=2        # per 2 seconds
         )
         
     def get_limiter(self, api_name: str) -> Optional[RateLimiter]:

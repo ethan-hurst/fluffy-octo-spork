@@ -5,7 +5,7 @@ Market analyzer for identifying high-value opportunities.
 import logging
 import math
 import time
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import List, Optional
 
 from src.analyzers.models import AnalysisResult, MarketOpportunity, OpportunityScore
@@ -264,7 +264,7 @@ class MarketAnalyzer:
             return 0.5  # Unknown end date
             
         # Handle timezone-aware datetime comparison
-        now = datetime.now()
+        now = datetime.now(timezone.utc)
         if market.end_date_iso.tzinfo is not None:
             # Market date is timezone-aware, make now timezone-aware too
             from datetime import timezone
@@ -589,7 +589,7 @@ class MarketAnalyzer:
         # Time analysis with specific metrics
         if market.end_date_iso:
             # Handle timezone-aware datetime comparison
-            now = datetime.now()
+            now = datetime.now(timezone.utc)
             if market.end_date_iso.tzinfo is not None:
                 from datetime import timezone
                 now = now.replace(tzinfo=timezone.utc)
@@ -624,7 +624,7 @@ class MarketAnalyzer:
         if market.volume and market.volume > 5000:
             confidence_factors.append("sufficient market volume")
         if market.end_date_iso:
-            days_left = (market.end_date_iso.replace(tzinfo=None) - datetime.now()).days if market.end_date_iso else None
+            days_left = (market.end_date_iso - datetime.now(timezone.utc)).days if market.end_date_iso else None
             if days_left and days_left <= 30:
                 confidence_factors.append("near-term resolution")
                 

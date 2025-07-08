@@ -5,7 +5,7 @@ Replaces the naive 50% baseline with intelligent base rates.
 
 import logging
 import re
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Dict, List, Optional, Tuple
 from dataclasses import dataclass
 
@@ -482,7 +482,7 @@ class FairValueEngine:
         if not market.end_date_iso:
             return None
             
-        now = datetime.now()
+        now = datetime.now(timezone.utc)
         if market.end_date_iso.tzinfo is not None:
             from datetime import timezone
             now = now.replace(tzinfo=timezone.utc)
@@ -803,7 +803,7 @@ class FairValueEngine:
         if not market.end_date_iso:
             return 0.0, "No end date available"
             
-        now = datetime.now()
+        now = datetime.now(timezone.utc)
         if market.end_date_iso.tzinfo is not None:
             from datetime import timezone
             now = now.replace(tzinfo=timezone.utc)

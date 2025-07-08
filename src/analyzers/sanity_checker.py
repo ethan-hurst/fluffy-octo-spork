@@ -5,6 +5,7 @@ Validates predictions against common sense and market efficiency principles.
 """
 
 import logging
+from datetime import datetime, timezone
 from typing import Tuple, List, Optional
 from dataclasses import dataclass
 
@@ -200,12 +201,12 @@ class SanityChecker:
         # Check timeline feasibility
         if "before" in question or "by" in question:
             import re
-            from datetime import datetime, timedelta
+            from datetime import timedelta
             
             # Try to extract timeline
             months = re.search(r'(january|february|march|april|may|june|july|august|september|october|november|december)', question)
             if months and market.end_date_iso:
-                days_until = (market.end_date_iso - datetime.now()).days
+                days_until = (market.end_date_iso - datetime.now(timezone.utc)).days
                 if days_until < 60 and probability > 0.2:
                     warnings.append(
                         f"Only {days_until} days until deadline. "
@@ -230,8 +231,7 @@ class SanityChecker:
         if not market.end_date_iso:
             return warnings
             
-        from datetime import datetime
-        days_until = (market.end_date_iso - datetime.now()).days
+        days_until = (market.end_date_iso - datetime.now(timezone.utc)).days
         
         # Short timeline checks
         if days_until < 30:

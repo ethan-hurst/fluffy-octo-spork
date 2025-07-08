@@ -5,7 +5,9 @@ NewsAPI client for fetching current events.
 import asyncio
 import logging
 from datetime import datetime, timedelta
-from typing import List, Optional
+from typing import List, Optional, Dict, Tuple
+import hashlib
+import json
 
 import httpx
 from httpx import AsyncClient
@@ -33,6 +35,9 @@ class NewsClient:
         self.base_url = base_url or settings.news_api_url
         self.api_key = api_key or settings.news_api_key
         self._client: Optional[AsyncClient] = None
+        # Simple in-memory cache with TTL
+        self._cache: Dict[str, Tuple[NewsResponse, datetime]] = {}
+        self._cache_ttl = timedelta(minutes=15)  # Cache for 15 minutes
         
     async def __aenter__(self) -> "NewsClient":
         """Async context manager entry."""
@@ -109,6 +114,19 @@ class NewsClient:
             params["from"] = from_date.isoformat()
         if to_date:
             params["to"] = to_date.isoformat()
+        
+        # Create cache key from params
+        cache_key = hashlib.md5(json.dumps(params, sort_keys=True).encode()).hexdigest()
+        
+        # Check cache first
+        if cache_key in self._cache:
+            cached_response, cache_time = self._cache[cache_key]
+            if datetime.now() - cache_time < self._cache_ttl:
+                logger.debug(f"Returning cached news response for key {cache_key}")
+                return cached_response
+            else:
+                # Remove expired cache entry
+                del self._cache[cache_key]
             
         try:
             # Apply rate limiting
@@ -117,7 +135,24 @@ class NewsClient:
             response = await self._client.get("/everything", params=params)
             response.raise_for_status()
             data = response.json()
-            return NewsResponse(**data)
+            news_response = NewsResponse(**data)
+            
+            # Cache successful response
+            self._cache[cache_key] = (news_response, datetime.now())
+            
+            return news_response
+        except httpx.HTTPStatusError as e:
+            if e.response.status_code == 429:
+                logger.warning(f"NewsAPI rate limit exceeded. Consider upgrading API plan or reducing request frequency.")
+                # Return empty response instead of failing
+                return NewsResponse(
+                    status="error",
+                    total_results=0,
+                    articles=[]
+                )
+            else:
+                logger.error(f"HTTP status error getting news: {e}")
+                raise
         except httpx.HTTPError as e:
             logger.error(f"HTTP error getting news: {e}")
             raise
@@ -170,6 +205,13 @@ class NewsClient:
                 # Longer delay to respect rate limits
                 await asyncio.sleep(1.0)
                 
+            except httpx.HTTPStatusError as e:
+                if e.response.status_code == 429:
+                    logger.warning(f"Rate limit hit for query '{query}'. Skipping remaining queries.")
+                    break  # Stop trying more queries
+                else:
+                    logger.error(f"HTTP error fetching news for query '{query}': {e}")
+                    continue
             except Exception as e:
                 logger.error(f"Error fetching news for query '{query}': {e}")
                 continue
@@ -214,6 +256,12 @@ class NewsClient:
             
             return response.relevant_articles[:max_articles]
             
+        except httpx.HTTPStatusError as e:
+            if e.response.status_code == 429:
+                logger.warning("Rate limit hit fetching breaking news. Returning empty list.")
+            else:
+                logger.error(f"HTTP error fetching breaking news: {e}")
+            return []
         except Exception as e:
             logger.error(f"Error fetching breaking news: {e}")
             return []

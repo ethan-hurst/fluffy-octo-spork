@@ -391,10 +391,10 @@ class CryptoFinancialModel:
         timeframe_days = 365  # Default to 1 year
         if '2024' in full_text:
             # Calculate days until end of 2024
-            end_2024 = datetime(2024, 12, 31)
+            end_2024 = datetime(2024, 12, 31, tzinfo=timezone.utc)
             timeframe_days = max(1, (end_2024 - datetime.now(timezone.utc)).days)
         elif '2025' in full_text:
-            end_2025 = datetime(2025, 12, 31)
+            end_2025 = datetime(2025, 12, 31, tzinfo=timezone.utc)
             timeframe_days = max(1, (end_2025 - datetime.now(timezone.utc)).days)
             
         return (asset, target_price, timeframe_days)

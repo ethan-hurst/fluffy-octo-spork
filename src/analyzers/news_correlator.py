@@ -5,7 +5,7 @@ News correlator for matching news articles with prediction markets.
 import logging
 import re
 from collections import defaultdict
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Dict, List, Set, Tuple
 
 from src.clients.news.models import NewsArticle
@@ -267,7 +267,10 @@ class NewsCorrelator:
             score += category_score * 0.3
             
         # 3. Article freshness (20% weight)
-        hours_old = (datetime.now() - article.published_at.replace(tzinfo=None)).total_seconds() / 3600
+        # Convert both to UTC for comparison
+        now_utc = datetime.now(timezone.utc)
+        article_utc = article.published_at if article.published_at.tzinfo else article.published_at.replace(tzinfo=timezone.utc)
+        hours_old = (now_utc - article_utc).total_seconds() / 3600
         freshness_score = max(0, 1 - hours_old / 168)  # Decay over 1 week
         score += freshness_score * 0.2
         
@@ -298,7 +301,7 @@ class NewsCorrelator:
         Returns:
             List[Tuple[str, List[NewsArticle]]]: Topic clusters with articles
         """
-        cutoff_time = datetime.now() - timedelta(hours=time_window_hours)
+        cutoff_time = datetime.now(timezone.utc) - timedelta(hours=time_window_hours)
         recent_articles = [
             article for article in news_articles 
             if article.published_at.replace(tzinfo=None) > cutoff_time

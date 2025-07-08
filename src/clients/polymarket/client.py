@@ -4,7 +4,7 @@ Polymarket CLOB API client.
 
 import asyncio
 import logging
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Dict, List, Optional
 
 import httpx
@@ -144,7 +144,7 @@ class PolymarketClient:
             response = await self.get_markets(next_cursor=next_cursor, limit=100)
             
             # Filter active markets and ensure they haven't ended
-            now = datetime.now()
+            now = datetime.now(timezone.utc)
             active_markets = []
             for m in response.data:
                 if m.active and not m.closed:
@@ -152,15 +152,12 @@ class PolymarketClient:
                     if m.end_date_iso:
                         # Make datetime comparison timezone-aware
                         end_date = m.end_date_iso
+                        # If end_date is timezone-naive, assume UTC
                         if end_date.tzinfo is None:
-                            from datetime import timezone
                             end_date = end_date.replace(tzinfo=timezone.utc)
-                            now_tz = now.replace(tzinfo=timezone.utc)
-                        else:
-                            now_tz = now.astimezone(end_date.tzinfo)
                         
                         # Only include if end date is in the future
-                        if end_date > now_tz:
+                        if end_date > now:
                             active_markets.append(m)
                     else:
                         # No end date, include it
