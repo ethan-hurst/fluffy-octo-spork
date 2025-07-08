@@ -139,6 +139,27 @@ class FairValueEngine:
         
         return distribution.mean, 1.0 - distribution.mean, reasoning
         
+    def _determine_market_type(self, market: Market) -> str:
+        """Determine market type for evidence weighting."""
+        if self._is_political_binary(market):
+            return "political"
+        elif self._is_crypto_financial(market):
+            return "crypto"
+        elif self._is_sports_event(market):
+            return "sports"
+        else:
+            return "general"
+            
+    def _generate_bayesian_reasoning(self, distribution, base_reasoning: str) -> str:
+        """Generate reasoning for Bayesian probability distribution."""
+        reasoning_parts = [
+            f"Base: {base_reasoning}",
+            f"Bayesian Fair Value: {distribution.mean:.1%}",
+            f"Confidence Interval: {distribution.lower_bound:.1%} - {distribution.upper_bound:.1%}",
+            f"Uncertainty: {distribution.uncertainty:.1%}"
+        ]
+        return " | ".join(reasoning_parts)
+        
     def _get_base_probability(self, market: Market) -> Tuple[float, str]:
         """
         Get intelligent base probability using historical patterns.
