@@ -156,13 +156,25 @@ class PolymarketClient:
             logger.warning(f"Market {market.condition_id} has insufficient tokens")
             return None
             
-        # Find YES and NO tokens
-        yes_token = next((t for t in market.tokens if "yes" in t.outcome.lower()), None)
-        no_token = next((t for t in market.tokens if "no" in t.outcome.lower()), None)
+        # Find YES and NO tokens (try multiple patterns)
+        yes_token = None
+        no_token = None
         
+        for token in market.tokens:
+            outcome_lower = token.outcome.lower()
+            if any(keyword in outcome_lower for keyword in ["yes", "true", "will happen", "win"]):
+                yes_token = token
+            elif any(keyword in outcome_lower for keyword in ["no", "false", "will not happen", "lose"]):
+                no_token = token
+                
+        # If still not found, use first two tokens if exactly 2 tokens exist
         if not yes_token or not no_token:
-            logger.warning(f"Market {market.condition_id} missing YES/NO tokens")
-            return None
+            if len(market.tokens) == 2:
+                yes_token = market.tokens[0]  # Assume first is YES
+                no_token = market.tokens[1]   # Assume second is NO
+            else:
+                logger.warning(f"Market {market.condition_id} missing YES/NO tokens")
+                return None
             
         if yes_token.price is None or no_token.price is None:
             logger.warning(f"Market {market.condition_id} missing price data")

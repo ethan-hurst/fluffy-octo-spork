@@ -253,8 +253,31 @@ class MarketAnalyzer:
         if not market.end_date_iso:
             return 0.5  # Unknown end date
             
-        days_until_end = (market.end_date_iso - datetime.now()).days
+        # Handle timezone-aware datetime comparison
+        now = datetime.now()
+        if market.end_date_iso.tzinfo is not None:
+            # Market date is timezone-aware, make now timezone-aware too
+            from datetime import timezone
+            now = now.replace(tzinfo=timezone.utc)
+        else:
+            # Market date is naive, ensure now is also naive
+            market_end = market.end_date_iso.replace(tzinfo=None) if market.end_date_iso.tzinfo else market.end_date_iso
+            days_until_end = (market_end - now).days
+            return self._calculate_time_score_from_days(days_until_end)
+            
+        days_until_end = (market.end_date_iso - now).days
+        return self._calculate_time_score_from_days(days_until_end)
         
+    def _calculate_time_score_from_days(self, days_until_end: int) -> float:
+        """
+        Calculate time score from days until end.
+        
+        Args:
+            days_until_end: Days until market resolution
+            
+        Returns:
+            float: Time score (0-1)
+        """
         if days_until_end <= 0:
             return 0.0  # Market already ended
         elif days_until_end <= 7:
@@ -423,7 +446,7 @@ class MarketAnalyzer:
         related_news: List[NewsArticle]
     ) -> str:
         """
-        Generate human-readable reasoning for the analysis.
+        Generate comprehensive human-readable reasoning for the analysis.
         
         Args:
             market: Market data
@@ -433,44 +456,109 @@ class MarketAnalyzer:
             related_news: Related news articles
             
         Returns:
-            str: Analysis reasoning
+            str: Detailed analysis reasoning
         """
         reasoning_parts = []
         
-        # Price analysis
+        # Price analysis with confidence metrics
         yes_diff = fair_yes_price - price.yes_price
         no_diff = fair_no_price - price.no_price
         
         if abs(yes_diff) > abs(no_diff):
             if yes_diff > 0:
-                reasoning_parts.append(f"YES appears undervalued by {yes_diff:.1%}")
+                reasoning_parts.append(f"YES appears undervalued by {yes_diff:.1%} (Current: {price.yes_price:.1%} vs Fair: {fair_yes_price:.1%})")
             else:
-                reasoning_parts.append(f"YES appears overvalued by {abs(yes_diff):.1%}")
+                reasoning_parts.append(f"YES appears overvalued by {abs(yes_diff):.1%} (Current: {price.yes_price:.1%} vs Fair: {fair_yes_price:.1%})")
         else:
             if no_diff > 0:
-                reasoning_parts.append(f"NO appears undervalued by {no_diff:.1%}")
+                reasoning_parts.append(f"NO appears undervalued by {no_diff:.1%} (Current: {price.no_price:.1%} vs Fair: {fair_no_price:.1%})")
             else:
-                reasoning_parts.append(f"NO appears overvalued by {abs(no_diff):.1%}")
+                reasoning_parts.append(f"NO appears overvalued by {abs(no_diff):.1%} (Current: {price.no_price:.1%} vs Fair: {fair_no_price:.1%})")
                 
-        # News context
-        if related_news:
-            reasoning_parts.append(f"Based on analysis of {len(related_news)} related news articles")
+        # Market spread analysis
+        if price.spread > 0.1:
+            reasoning_parts.append(f"Wide spread ({price.spread:.1%}) indicates pricing uncertainty")
+        elif price.spread < 0.05:
+            reasoning_parts.append(f"Tight spread ({price.spread:.1%}) suggests efficient pricing")
             
-        # Volume context
+        # News sentiment and quality analysis
+        if related_news:
+            news_sentiment = self._analyze_news_sentiment(related_news)
+            sentiment_desc = "positive" if news_sentiment > 0.1 else "negative" if news_sentiment < -0.1 else "neutral"
+            
+            # Get news source quality
+            high_quality_sources = sum(1 for article in related_news 
+                                     if any(source in article.source.name.lower() 
+                                           for source in ["reuters", "bbc", "bloomberg", "associated press", "wall street journal"]))
+            
+            reasoning_parts.append(f"News analysis: {len(related_news)} articles with {sentiment_desc} sentiment")
+            if high_quality_sources > 0:
+                reasoning_parts.append(f"{high_quality_sources} high-quality news sources provide additional confidence")
+                
+            # Add most relevant headlines
+            if len(related_news) > 0:
+                top_headlines = [article.title for article in related_news[:2]]
+                reasoning_parts.append(f"Key headlines: {'; '.join(top_headlines)}")
+        else:
+            reasoning_parts.append("Limited news coverage - analysis relies on market fundamentals")
+            
+        # Volume and liquidity analysis with specific metrics
         if market.volume:
-            if market.volume > 10000:
-                reasoning_parts.append("High volume market with good liquidity")
+            volume_score = min(1.0, market.volume / 50000)  # Normalize against $50k
+            if market.volume > 50000:
+                reasoning_parts.append(f"Excellent liquidity (${market.volume:,.0f} volume, {volume_score:.1%} liquidity score)")
+            elif market.volume > 10000:
+                reasoning_parts.append(f"Good liquidity (${market.volume:,.0f} volume, {volume_score:.1%} liquidity score)")
             elif market.volume > 1000:
-                reasoning_parts.append("Moderate volume market")
+                reasoning_parts.append(f"Moderate liquidity (${market.volume:,.0f} volume, {volume_score:.1%} liquidity score) - consider position sizing")
             else:
-                reasoning_parts.append("Low volume market - higher risk")
-                
-        # Time context
+                reasoning_parts.append(f"Low liquidity (${market.volume:,.0f} volume, {volume_score:.1%} liquidity score) - high risk")
+        else:
+            reasoning_parts.append("Volume data unavailable - liquidity risk unknown")
+            
+        # Time analysis with specific metrics
         if market.end_date_iso:
-            days_until_end = (market.end_date_iso - datetime.now()).days
-            if days_until_end <= 7:
-                reasoning_parts.append("Market resolves soon - higher confidence")
-            elif days_until_end > 90:
-                reasoning_parts.append("Long-term market - lower confidence")
+            # Handle timezone-aware datetime comparison
+            now = datetime.now()
+            if market.end_date_iso.tzinfo is not None:
+                from datetime import timezone
+                now = now.replace(tzinfo=timezone.utc)
+            else:
+                market.end_date_iso = market.end_date_iso.replace(tzinfo=None) if market.end_date_iso.tzinfo else market.end_date_iso
                 
+            days_until_end = (market.end_date_iso - now).days
+            time_score = self._calculate_time_score_from_days(days_until_end)
+            
+            if days_until_end <= 7:
+                reasoning_parts.append(f"Resolves in {days_until_end} days (time score: {time_score:.2f}) - very high confidence")
+            elif days_until_end <= 30:
+                reasoning_parts.append(f"Resolves in {days_until_end} days (time score: {time_score:.2f}) - high confidence")
+            elif days_until_end <= 90:
+                reasoning_parts.append(f"Resolves in {days_until_end} days (time score: {time_score:.2f}) - moderate time risk")
+            else:
+                reasoning_parts.append(f"Resolves in {days_until_end} days (time score: {time_score:.2f}) - significant time risk")
+        else:
+            reasoning_parts.append("Resolution date unknown - adds uncertainty to analysis")
+            
+        # Category-specific insights
+        if market.category:
+            category_adjustment = self._get_category_adjustment(market)
+            if abs(category_adjustment) > 0.02:
+                direction = "bullish" if category_adjustment > 0 else "bearish"
+                reasoning_parts.append(f"Category analysis ({market.category}) suggests {direction} bias ({category_adjustment:+.1%})")
+                
+        # Statistical confidence indicators
+        confidence_factors = []
+        if related_news and len(related_news) >= 3:
+            confidence_factors.append("adequate news coverage")
+        if market.volume and market.volume > 5000:
+            confidence_factors.append("sufficient market volume")
+        if market.end_date_iso:
+            days_left = (market.end_date_iso.replace(tzinfo=None) - datetime.now()).days if market.end_date_iso else None
+            if days_left and days_left <= 30:
+                confidence_factors.append("near-term resolution")
+                
+        if confidence_factors:
+            reasoning_parts.append(f"Confidence boosted by: {', '.join(confidence_factors)}")
+            
         return ". ".join(reasoning_parts) + "."

@@ -17,6 +17,7 @@ from src.console.display import DisplayManager
 from src.utils.cache import api_cache
 from src.utils.rate_limiter import rate_limiters
 from src.utils.prediction_tracker import prediction_tracker
+from src.console.chat import start_market_chat
 
 logger = logging.getLogger(__name__)
 
@@ -129,6 +130,8 @@ class PolymarketAnalyzerApp:
             self._export_predictions(args[0])
         elif cmd == "resolve" and len(args) >= 2:
             self._resolve_prediction(args[0], args[1])
+        elif cmd == "chat" and args:
+            await self._start_market_chat(args[0])
         elif cmd == "help":
             self.display.print_menu()
         elif cmd == "quit" or cmd == "exit":
@@ -402,6 +405,43 @@ class PolymarketAnalyzerApp:
             self.display.print_success(f"Updated prediction {condition_id} with outcome: {outcome}")
         else:
             self.display.print_error(f"Prediction not found: {condition_id}")
+            
+    async def _start_market_chat(self, opportunity_id: str) -> None:
+        """
+        Start interactive chat about a specific market.
+        
+        Args:
+            opportunity_id: Opportunity condition ID or rank number
+        """
+        if not self.last_analysis:
+            self.display.print_warning("No analysis results available. Run 'analyze' first.")
+            return
+            
+        # Find the opportunity
+        opportunity = None
+        
+        # Try to find by condition ID
+        for opp in self.last_analysis.opportunities:
+            if opp.condition_id == opportunity_id:
+                opportunity = opp
+                break
+                
+        # Try to find by rank number
+        if not opportunity:
+            try:
+                rank = int(opportunity_id)
+                if 1 <= rank <= len(self.last_analysis.top_opportunities):
+                    opportunity = self.last_analysis.top_opportunities[rank - 1]
+            except ValueError:
+                pass
+                
+        if not opportunity:
+            self.display.print_error(f"Opportunity not found: {opportunity_id}")
+            self.display.print_info("Use the condition ID or rank number from the opportunities list.")
+            return
+            
+        # Start chat session
+        start_market_chat(opportunity)
 
 
 async def main() -> None:

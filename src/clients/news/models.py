@@ -68,7 +68,7 @@ class NewsResponse(BaseModel):
     """
     
     status: str = Field(..., description="Response status")
-    total_results: int = Field(..., description="Total number of results")
+    total_results: Optional[int] = Field(None, alias="totalResults", description="Total number of results")
     articles: List[NewsArticle] = Field(..., description="List of articles")
     
     @property
