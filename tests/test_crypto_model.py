@@ -8,7 +8,7 @@ from unittest.mock import patch, MagicMock
 
 from src.analyzers.crypto_model import (
     CryptoFinancialModel, ETFApprovalStage, ETFApplication, 
-    CryptoMarketData, TechnicalIndicators, RegulatorySentiment
+    CryptoMarketData, FinancialIndicators
 )
 from src.clients.polymarket.models import Market
 from src.clients.news.models import NewsArticle
