@@ -11,7 +11,7 @@ from src.analyzers.crypto_model import (
     CryptoMarketData, FinancialIndicators
 )
 from src.clients.polymarket.models import Market, Token
-from src.clients.news.models import NewsArticle
+from src.clients.news.models import NewsArticle, NewsSource
 from src.analyzers.bayesian_updater import ProbabilityDistribution
 
 
@@ -167,21 +167,21 @@ class TestCryptoFinancialModel:
                 description="Regulatory chief indicates willingness to approve crypto products",
                 url="https://example.com/sec-btc-etf",
                 published_at=now - timedelta(hours=2),
-                source="Reuters"
+                source=NewsSource(name="Reuters")
             ),
             NewsArticle(
                 title="Major Institution Adds Bitcoin to Portfolio",
                 description="Large pension fund allocates 5% to cryptocurrency",
                 url="https://example.com/institutional-adoption",
                 published_at=now - timedelta(hours=1),
-                source="Bloomberg"
+                source=NewsSource(name="Bloomberg")
             ),
             NewsArticle(
                 title="Crypto Market Volatility Concerns Regulators",
                 description="Officials cite price swings as barrier to approval",
                 url="https://example.com/volatility-concerns",
                 published_at=now - timedelta(hours=3),
-                source="WSJ"
+                source=NewsSource(name="WSJ")
             )
         ]
         

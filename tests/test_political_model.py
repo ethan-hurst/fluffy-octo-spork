@@ -10,7 +10,7 @@ from src.analyzers.political_model import (
     PoliticalMarketModel, PollData, ElectionFundamentals
 )
 from src.clients.polymarket.models import Market, Token
-from src.clients.news.models import NewsArticle
+from src.clients.news.models import NewsArticle, NewsSource
 from src.analyzers.bayesian_updater import ProbabilityDistribution
 
 
@@ -122,14 +122,14 @@ class TestPoliticalMarketModel:
                 description="Former president showing strength in key battleground states",
                 url="https://example.com/trump-leads",
                 published_at=now - timedelta(hours=2),
-                source="Reuters"
+                source=NewsSource(name="Reuters")
             ),
             NewsArticle(
                 title="Biden Campaign Raises Record Fundraising",
                 description="President's campaign reports strong donor enthusiasm",
                 url="https://example.com/biden-fundraising",
                 published_at=now - timedelta(hours=1),
-                source="AP"
+                source=NewsSource(name="AP")
             )
         ]
         

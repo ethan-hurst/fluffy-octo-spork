@@ -11,7 +11,7 @@ from src.analyzers.sports_model import (
     CoachingData, PlayerStats, InjuryReport
 )
 from src.clients.polymarket.models import Market, Token
-from src.clients.news.models import NewsArticle
+from src.clients.news.models import NewsArticle, NewsSource
 from src.analyzers.bayesian_updater import ProbabilityDistribution
 
 
@@ -109,21 +109,21 @@ class TestSportsMarketModel:
                 description="Team showing frustration with coaching decisions",
                 url="https://example.com/jets-coach",
                 published_at=now - timedelta(hours=2),
-                source="ESPN"
+                source=NewsSource(name="ESPN")
             ),
             NewsArticle(
                 title="Lakers Looking Strong in Championship Push",
                 description="Team chemistry improving with healthy roster",
                 url="https://example.com/lakers-strong",
                 published_at=now - timedelta(hours=1),
-                source="ESPN"
+                source=NewsSource(name="ESPN")
             ),
             NewsArticle(
                 title="LeBron Hints at Retirement Consideration",
                 description="Star player considering his future after this season",
                 url="https://example.com/lebron-retirement",
                 published_at=now - timedelta(hours=3),
-                source="ESPN"
+                source=NewsSource(name="ESPN")
             )
         ]
         
