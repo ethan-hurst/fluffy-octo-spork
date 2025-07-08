@@ -81477,3 +81477,258 @@ EOFError: EOF when reading a line
 2025-07-08 00:42:22,518 - src.utils.prediction_tracker - INFO - Logged prediction for 0xb82d5aec1ad294e21e835cee5ecf2f56ec40ddc925d7f30d6a7831d1679505c5: NO
 2025-07-08 00:42:22,519 - src.utils.prediction_tracker - INFO - Logged prediction for 0xf9e277c2e86f21c20388a587540501947c4f4a1337c7aa1e14b3211c58c0d3f0: YES
 2025-07-08 00:42:22,519 - src.utils.prediction_tracker - INFO - Logged prediction for 0xb55fdad84ac4bb380b21a60fdc7442b0d74c9947c6f9cb801690cc9d0151f9a5: YES
+2025-07-08 00:50:49,367 - httpx - INFO - HTTP Request: GET https://clob.polymarket.com/markets?limit=100 "HTTP/1.1 200 OK"
+2025-07-08 00:50:50,733 - httpx - INFO - HTTP Request: GET https://clob.polymarket.com/markets?next_cursor=NTAw&limit=100 "HTTP/1.1 200 OK"
+2025-07-08 00:50:51,878 - httpx - INFO - HTTP Request: GET https://clob.polymarket.com/markets?next_cursor=MTAwMA%3D%3D&limit=100 "HTTP/1.1 200 OK"
+2025-07-08 00:50:53,022 - httpx - INFO - HTTP Request: GET https://clob.polymarket.com/markets?next_cursor=MTUwMA%3D%3D&limit=100 "HTTP/1.1 200 OK"
+2025-07-08 00:50:54,170 - httpx - INFO - HTTP Request: GET https://clob.polymarket.com/markets?next_cursor=MjAwMA%3D%3D&limit=100 "HTTP/1.1 200 OK"
+2025-07-08 00:50:55,321 - httpx - INFO - HTTP Request: GET https://clob.polymarket.com/markets?next_cursor=MjUwMA%3D%3D&limit=100 "HTTP/1.1 200 OK"
+2025-07-08 00:50:56,478 - httpx - INFO - HTTP Request: GET https://clob.polymarket.com/markets?next_cursor=MzAwMA%3D%3D&limit=100 "HTTP/1.1 200 OK"
+2025-07-08 00:50:57,639 - httpx - INFO - HTTP Request: GET https://clob.polymarket.com/markets?next_cursor=MzUwMA%3D%3D&limit=100 "HTTP/1.1 200 OK"
+2025-07-08 00:50:58,938 - httpx - INFO - HTTP Request: GET https://clob.polymarket.com/markets?next_cursor=NDAwMA%3D%3D&limit=100 "HTTP/1.1 200 OK"
+2025-07-08 00:51:00,086 - httpx - INFO - HTTP Request: GET https://clob.polymarket.com/markets?next_cursor=NDUwMA%3D%3D&limit=100 "HTTP/1.1 200 OK"
+2025-07-08 00:51:01,466 - httpx - INFO - HTTP Request: GET https://clob.polymarket.com/markets?next_cursor=NTAwMA%3D%3D&limit=100 "HTTP/1.1 200 OK"
+2025-07-08 00:51:02,617 - httpx - INFO - HTTP Request: GET https://clob.polymarket.com/markets?next_cursor=NTUwMA%3D%3D&limit=100 "HTTP/1.1 200 OK"
+2025-07-08 00:51:03,779 - httpx - INFO - HTTP Request: GET https://clob.polymarket.com/markets?next_cursor=NjAwMA%3D%3D&limit=100 "HTTP/1.1 200 OK"
+2025-07-08 00:51:04,659 - httpx - INFO - HTTP Request: GET https://clob.polymarket.com/markets?next_cursor=NjUwMA%3D%3D&limit=100 "HTTP/1.1 200 OK"
+2025-07-08 00:51:05,556 - httpx - INFO - HTTP Request: GET https://clob.polymarket.com/markets?next_cursor=NzAwMA%3D%3D&limit=100 "HTTP/1.1 200 OK"
+2025-07-08 00:51:06,451 - httpx - INFO - HTTP Request: GET https://clob.polymarket.com/markets?next_cursor=NzUwMA%3D%3D&limit=100 "HTTP/1.1 200 OK"
+2025-07-08 00:51:07,350 - httpx - INFO - HTTP Request: GET https://clob.polymarket.com/markets?next_cursor=ODAwMA%3D%3D&limit=100 "HTTP/1.1 200 OK"
+2025-07-08 00:51:08,262 - httpx - INFO - HTTP Request: GET https://clob.polymarket.com/markets?next_cursor=ODUwMA%3D%3D&limit=100 "HTTP/1.1 200 OK"
+2025-07-08 00:51:09,646 - httpx - INFO - HTTP Request: GET https://clob.polymarket.com/markets?next_cursor=OTAwMA%3D%3D&limit=100 "HTTP/1.1 200 OK"
+2025-07-08 00:51:11,044 - httpx - INFO - HTTP Request: GET https://clob.polymarket.com/markets?next_cursor=OTUwMA%3D%3D&limit=100 "HTTP/1.1 200 OK"
+2025-07-08 00:51:12,198 - httpx - INFO - HTTP Request: GET https://clob.polymarket.com/markets?next_cursor=MTAwMDA%3D&limit=100 "HTTP/1.1 200 OK"
+2025-07-08 00:51:13,370 - httpx - INFO - HTTP Request: GET https://clob.polymarket.com/markets?next_cursor=MTA1MDA%3D&limit=100 "HTTP/1.1 200 OK"
+2025-07-08 00:51:14,540 - httpx - INFO - HTTP Request: GET https://clob.polymarket.com/markets?next_cursor=MTEwMDA%3D&limit=100 "HTTP/1.1 200 OK"
+2025-07-08 00:51:15,685 - httpx - INFO - HTTP Request: GET https://clob.polymarket.com/markets?next_cursor=MTE1MDA%3D&limit=100 "HTTP/1.1 200 OK"
+2025-07-08 00:51:16,833 - httpx - INFO - HTTP Request: GET https://clob.polymarket.com/markets?next_cursor=MTIwMDA%3D&limit=100 "HTTP/1.1 200 OK"
+2025-07-08 00:51:17,970 - httpx - INFO - HTTP Request: GET https://clob.polymarket.com/markets?next_cursor=MTI1MDA%3D&limit=100 "HTTP/1.1 200 OK"
+2025-07-08 00:51:19,114 - httpx - INFO - HTTP Request: GET https://clob.polymarket.com/markets?next_cursor=MTMwMDA%3D&limit=100 "HTTP/1.1 200 OK"
+2025-07-08 00:51:20,261 - httpx - INFO - HTTP Request: GET https://clob.polymarket.com/markets?next_cursor=MTM1MDA%3D&limit=100 "HTTP/1.1 200 OK"
+2025-07-08 00:51:21,420 - httpx - INFO - HTTP Request: GET https://clob.polymarket.com/markets?next_cursor=MTQwMDA%3D&limit=100 "HTTP/1.1 200 OK"
+2025-07-08 00:51:22,327 - httpx - INFO - HTTP Request: GET https://clob.polymarket.com/markets?next_cursor=MTQ1MDA%3D&limit=100 "HTTP/1.1 200 OK"
+2025-07-08 00:51:23,709 - httpx - INFO - HTTP Request: GET https://clob.polymarket.com/markets?next_cursor=MTUwMDA%3D&limit=100 "HTTP/1.1 200 OK"
+2025-07-08 00:51:25,105 - httpx - INFO - HTTP Request: GET https://clob.polymarket.com/markets?next_cursor=MTU1MDA%3D&limit=100 "HTTP/1.1 200 OK"
+2025-07-08 00:51:26,278 - httpx - INFO - HTTP Request: GET https://clob.polymarket.com/markets?next_cursor=MTYwMDA%3D&limit=100 "HTTP/1.1 200 OK"
+2025-07-08 00:51:27,694 - httpx - INFO - HTTP Request: GET https://clob.polymarket.com/markets?next_cursor=MTY1MDA%3D&limit=100 "HTTP/1.1 200 OK"
+2025-07-08 00:51:28,883 - httpx - INFO - HTTP Request: GET https://clob.polymarket.com/markets?next_cursor=MTcwMDA%3D&limit=100 "HTTP/1.1 200 OK"
+2025-07-08 00:51:30,166 - httpx - INFO - HTTP Request: GET https://clob.polymarket.com/markets?next_cursor=MTc1MDA%3D&limit=100 "HTTP/1.1 200 OK"
+2025-07-08 00:51:31,311 - httpx - INFO - HTTP Request: GET https://clob.polymarket.com/markets?next_cursor=MTgwMDA%3D&limit=100 "HTTP/1.1 200 OK"
+2025-07-08 00:51:32,462 - httpx - INFO - HTTP Request: GET https://clob.polymarket.com/markets?next_cursor=MTg1MDA%3D&limit=100 "HTTP/1.1 200 OK"
+2025-07-08 00:51:33,604 - httpx - INFO - HTTP Request: GET https://clob.polymarket.com/markets?next_cursor=MTkwMDA%3D&limit=100 "HTTP/1.1 200 OK"
+2025-07-08 00:51:34,989 - httpx - INFO - HTTP Request: GET https://clob.polymarket.com/markets?next_cursor=MTk1MDA%3D&limit=100 "HTTP/1.1 200 OK"
+2025-07-08 00:51:36,147 - httpx - INFO - HTTP Request: GET https://clob.polymarket.com/markets?next_cursor=MjAwMDA%3D&limit=100 "HTTP/1.1 200 OK"
+2025-07-08 00:51:37,303 - httpx - INFO - HTTP Request: GET https://clob.polymarket.com/markets?next_cursor=MjA1MDA%3D&limit=100 "HTTP/1.1 200 OK"
+2025-07-08 00:51:38,210 - httpx - INFO - HTTP Request: GET https://clob.polymarket.com/markets?next_cursor=MjEwMDA%3D&limit=100 "HTTP/1.1 200 OK"
+2025-07-08 00:51:39,153 - httpx - INFO - HTTP Request: GET https://clob.polymarket.com/markets?next_cursor=MjE1MDA%3D&limit=100 "HTTP/1.1 200 OK"
+2025-07-08 00:51:40,351 - httpx - INFO - HTTP Request: GET https://clob.polymarket.com/markets?next_cursor=MjIwMDA%3D&limit=100 "HTTP/1.1 200 OK"
+2025-07-08 00:51:41,283 - httpx - INFO - HTTP Request: GET https://clob.polymarket.com/markets?next_cursor=MjI1MDA%3D&limit=100 "HTTP/1.1 200 OK"
+2025-07-08 00:51:42,201 - httpx - INFO - HTTP Request: GET https://clob.polymarket.com/markets?next_cursor=MjMwMDA%3D&limit=100 "HTTP/1.1 200 OK"
+2025-07-08 00:51:43,213 - httpx - INFO - HTTP Request: GET https://clob.polymarket.com/markets?next_cursor=MjM1MDA%3D&limit=100 "HTTP/1.1 200 OK"
+2025-07-08 00:51:44,141 - httpx - INFO - HTTP Request: GET https://clob.polymarket.com/markets?next_cursor=MjQwMDA%3D&limit=100 "HTTP/1.1 200 OK"
+2025-07-08 00:51:45,077 - httpx - INFO - HTTP Request: GET https://clob.polymarket.com/markets?next_cursor=MjQ1MDA%3D&limit=100 "HTTP/1.1 200 OK"
+2025-07-08 00:51:46,234 - httpx - INFO - HTTP Request: GET https://clob.polymarket.com/markets?next_cursor=MjUwMDA%3D&limit=100 "HTTP/1.1 200 OK"
+2025-07-08 00:51:47,266 - httpx - INFO - HTTP Request: GET https://clob.polymarket.com/markets?next_cursor=MjU1MDA%3D&limit=100 "HTTP/1.1 200 OK"
+2025-07-08 00:51:48,217 - httpx - INFO - HTTP Request: GET https://clob.polymarket.com/markets?next_cursor=MjYwMDA%3D&limit=100 "HTTP/1.1 200 OK"
+2025-07-08 00:51:49,356 - httpx - INFO - HTTP Request: GET https://clob.polymarket.com/markets?next_cursor=MjY1MDA%3D&limit=100 "HTTP/1.1 200 OK"
+2025-07-08 00:51:50,591 - httpx - INFO - HTTP Request: GET https://clob.polymarket.com/markets?next_cursor=MjcwMDA%3D&limit=100 "HTTP/1.1 200 OK"
+2025-07-08 00:51:51,256 - httpx - INFO - HTTP Request: GET https://clob.polymarket.com/markets?next_cursor=Mjc1MDA%3D&limit=100 "HTTP/1.1 200 OK"
+2025-07-08 00:51:52,462 - httpx - INFO - HTTP Request: GET https://clob.polymarket.com/markets?next_cursor=MjgwMDA%3D&limit=100 "HTTP/1.1 200 OK"
+2025-07-08 00:51:53,513 - httpx - INFO - HTTP Request: GET https://clob.polymarket.com/markets?next_cursor=Mjg1MDA%3D&limit=100 "HTTP/1.1 200 OK"
+2025-07-08 00:51:54,686 - httpx - INFO - HTTP Request: GET https://clob.polymarket.com/markets?next_cursor=MjkwMDA%3D&limit=100 "HTTP/1.1 200 OK"
+2025-07-08 00:51:55,581 - httpx - INFO - HTTP Request: GET https://clob.polymarket.com/markets?next_cursor=Mjk1MDA%3D&limit=100 "HTTP/1.1 200 OK"
+2025-07-08 00:51:55,954 - src.clients.polymarket.client - INFO - Fetched 321 active markets before filtering
+2025-07-08 00:51:55,955 - src.utils.market_filters - INFO - Starting with 321 markets
+2025-07-08 00:51:55,955 - src.utils.market_filters - INFO - Markets sorted by volume (highest first)
+2025-07-08 00:51:55,956 - src.utils.market_filters - INFO - Final filtered result: 321 markets
+2025-07-08 00:51:55,956 - src.clients.polymarket.client - INFO - Returning 100 markets after filtering and limiting
+2025-07-08 00:51:55,957 - src.clients.polymarket.client - INFO - Filter summary: Active filters: Sorted by volume (highest first)
+2025-07-08 00:51:59,596 - httpx - INFO - HTTP Request: GET https://newsapi.org/v2/everything?language=en&sortBy=publishedAt&pageSize=50&page=1&q=election+OR+vote+OR+poll+OR+candidate+OR+president&from=2025-07-07T00%3A51%3A59.266683 "HTTP/1.1 200 OK"
+2025-07-08 00:51:59,938 - httpx - INFO - HTTP Request: GET https://newsapi.org/v2/everything?language=en&sortBy=publishedAt&pageSize=50&page=1&q=cryptocurrency+OR+bitcoin+OR+crypto+OR+blockchain&from=2025-07-07T00%3A51%3A59.266683 "HTTP/1.1 200 OK"
+2025-07-08 00:52:00,280 - httpx - INFO - HTTP Request: GET https://newsapi.org/v2/everything?language=en&sortBy=publishedAt&pageSize=50&page=1&q=stock+market+OR+economy+OR+recession+OR+inflation&from=2025-07-07T00%3A51%3A59.266683 "HTTP/1.1 200 OK"
+2025-07-08 00:52:00,626 - httpx - INFO - HTTP Request: GET https://newsapi.org/v2/everything?language=en&sortBy=publishedAt&pageSize=50&page=1&q=climate+OR+weather+OR+hurricane+OR+earthquake&from=2025-07-07T00%3A51%3A59.266683 "HTTP/1.1 200 OK"
+2025-07-08 00:52:00,973 - httpx - INFO - HTTP Request: GET https://newsapi.org/v2/everything?language=en&sortBy=publishedAt&pageSize=50&page=1&q=sports+championship+OR+tournament+OR+olympics&from=2025-07-07T00%3A51%3A59.266683 "HTTP/1.1 200 OK"
+2025-07-08 00:52:01,333 - httpx - INFO - HTTP Request: GET https://newsapi.org/v2/everything?language=en&sortBy=publishedAt&pageSize=50&page=1&q=AI+OR+artificial+intelligence+OR+technology&from=2025-07-07T00%3A51%3A59.266683 "HTTP/1.1 200 OK"
+2025-07-08 00:52:01,688 - httpx - INFO - HTTP Request: GET https://newsapi.org/v2/everything?language=en&sortBy=publishedAt&pageSize=50&page=1&q=policy+OR+regulation+OR+law+OR+legislation&from=2025-07-07T00%3A51%3A59.266683 "HTTP/1.1 200 OK"
+2025-07-08 00:52:01,789 - src.analyzers.market_analyzer - ERROR - Error analyzing market : float division by zero
+2025-07-08 00:52:01,812 - src.utils.prediction_tracker - INFO - Logged prediction for 0x290e8e125c5f8523f21500cc59c186f2c23762da51eec212c9dd956e5dabae3b: YES
+2025-07-08 00:52:01,812 - src.utils.prediction_tracker - INFO - Logged prediction for 0x79d3dd10febe982a33c279ef96ec5521bf73f0e54df3d332d46ebf7ce7221e3c: YES
+2025-07-08 00:52:01,812 - src.utils.prediction_tracker - INFO - Logged prediction for 0xc634b556b8f47434d7837594ff59c9daea654c4d5c9c50e2a352736db1d5c656: YES
+2025-07-08 00:52:01,812 - src.utils.prediction_tracker - INFO - Logged prediction for 0x6305af093bee55cfc31252a2ee4fac4b5af533b4884fda44978a1dfc8354343b: YES
+2025-07-08 00:52:01,813 - src.utils.prediction_tracker - INFO - Logged prediction for 0x27619d612e16ba61fd0c60000d6e1e17947f539bbd5fff7d08a1e0ecb3776462: NO
+2025-07-08 00:52:01,813 - src.utils.prediction_tracker - INFO - Logged prediction for 0x62b6cde136dde43f72ef7335b3292b422e6ba7dbe22fd903de90f290ad621ed6: YES
+2025-07-08 00:52:01,813 - src.utils.prediction_tracker - INFO - Logged prediction for 0xc34088962ec599eac20aa670acffeb7f983e4b42b61f37a68e7586afc90964e6: YES
+2025-07-08 00:52:01,813 - src.utils.prediction_tracker - INFO - Logged prediction for 0x7f6e9f3aee46ac8031a9879ed7e9d94b082c3e0e76395e82f9e7d5c57362efd8: YES
+2025-07-08 00:53:09,599 - httpx - INFO - HTTP Request: GET https://clob.polymarket.com/markets?limit=100 "HTTP/1.1 200 OK"
+2025-07-08 00:53:11,005 - httpx - INFO - HTTP Request: GET https://clob.polymarket.com/markets?next_cursor=NTAw&limit=100 "HTTP/1.1 200 OK"
+2025-07-08 00:53:12,170 - httpx - INFO - HTTP Request: GET https://clob.polymarket.com/markets?next_cursor=MTAwMA%3D%3D&limit=100 "HTTP/1.1 200 OK"
+2025-07-08 00:53:13,321 - httpx - INFO - HTTP Request: GET https://clob.polymarket.com/markets?next_cursor=MTUwMA%3D%3D&limit=100 "HTTP/1.1 200 OK"
+2025-07-08 00:53:14,487 - httpx - INFO - HTTP Request: GET https://clob.polymarket.com/markets?next_cursor=MjAwMA%3D%3D&limit=100 "HTTP/1.1 200 OK"
+2025-07-08 00:53:15,660 - httpx - INFO - HTTP Request: GET https://clob.polymarket.com/markets?next_cursor=MjUwMA%3D%3D&limit=100 "HTTP/1.1 200 OK"
+2025-07-08 00:53:16,818 - httpx - INFO - HTTP Request: GET https://clob.polymarket.com/markets?next_cursor=MzAwMA%3D%3D&limit=100 "HTTP/1.1 200 OK"
+2025-07-08 00:53:18,223 - httpx - INFO - HTTP Request: GET https://clob.polymarket.com/markets?next_cursor=MzUwMA%3D%3D&limit=100 "HTTP/1.1 200 OK"
+2025-07-08 00:53:19,380 - httpx - INFO - HTTP Request: GET https://clob.polymarket.com/markets?next_cursor=NDAwMA%3D%3D&limit=100 "HTTP/1.1 200 OK"
+2025-07-08 00:53:20,766 - httpx - INFO - HTTP Request: GET https://clob.polymarket.com/markets?next_cursor=NDUwMA%3D%3D&limit=100 "HTTP/1.1 200 OK"
+2025-07-08 00:53:22,161 - httpx - INFO - HTTP Request: GET https://clob.polymarket.com/markets?next_cursor=NTAwMA%3D%3D&limit=100 "HTTP/1.1 200 OK"
+2025-07-08 00:53:23,572 - httpx - INFO - HTTP Request: GET https://clob.polymarket.com/markets?next_cursor=NTUwMA%3D%3D&limit=100 "HTTP/1.1 200 OK"
+2025-07-08 00:53:24,976 - httpx - INFO - HTTP Request: GET https://clob.polymarket.com/markets?next_cursor=NjAwMA%3D%3D&limit=100 "HTTP/1.1 200 OK"
+2025-07-08 00:53:26,387 - httpx - INFO - HTTP Request: GET https://clob.polymarket.com/markets?next_cursor=NjUwMA%3D%3D&limit=100 "HTTP/1.1 200 OK"
+2025-07-08 00:53:27,587 - httpx - INFO - HTTP Request: GET https://clob.polymarket.com/markets?next_cursor=NzAwMA%3D%3D&limit=100 "HTTP/1.1 200 OK"
+2025-07-08 00:53:29,000 - httpx - INFO - HTTP Request: GET https://clob.polymarket.com/markets?next_cursor=NzUwMA%3D%3D&limit=100 "HTTP/1.1 200 OK"
+2025-07-08 00:53:30,403 - httpx - INFO - HTTP Request: GET https://clob.polymarket.com/markets?next_cursor=ODAwMA%3D%3D&limit=100 "HTTP/1.1 200 OK"
+2025-07-08 00:53:31,816 - httpx - INFO - HTTP Request: GET https://clob.polymarket.com/markets?next_cursor=ODUwMA%3D%3D&limit=100 "HTTP/1.1 200 OK"
+2025-07-08 00:53:33,226 - httpx - INFO - HTTP Request: GET https://clob.polymarket.com/markets?next_cursor=OTAwMA%3D%3D&limit=100 "HTTP/1.1 200 OK"
+2025-07-08 00:53:34,654 - httpx - INFO - HTTP Request: GET https://clob.polymarket.com/markets?next_cursor=OTUwMA%3D%3D&limit=100 "HTTP/1.1 200 OK"
+2025-07-08 00:53:35,807 - httpx - INFO - HTTP Request: GET https://clob.polymarket.com/markets?next_cursor=MTAwMDA%3D&limit=100 "HTTP/1.1 200 OK"
+2025-07-08 00:53:36,953 - httpx - INFO - HTTP Request: GET https://clob.polymarket.com/markets?next_cursor=MTA1MDA%3D&limit=100 "HTTP/1.1 200 OK"
+2025-07-08 00:53:38,372 - httpx - INFO - HTTP Request: GET https://clob.polymarket.com/markets?next_cursor=MTEwMDA%3D&limit=100 "HTTP/1.1 200 OK"
+2025-07-08 00:53:39,816 - httpx - INFO - HTTP Request: GET https://clob.polymarket.com/markets?next_cursor=MTE1MDA%3D&limit=100 "HTTP/1.1 200 OK"
+2025-07-08 00:53:40,985 - httpx - INFO - HTTP Request: GET https://clob.polymarket.com/markets?next_cursor=MTIwMDA%3D&limit=100 "HTTP/1.1 200 OK"
+2025-07-08 00:53:42,415 - httpx - INFO - HTTP Request: GET https://clob.polymarket.com/markets?next_cursor=MTI1MDA%3D&limit=100 "HTTP/1.1 200 OK"
+2025-07-08 00:53:43,823 - httpx - INFO - HTTP Request: GET https://clob.polymarket.com/markets?next_cursor=MTMwMDA%3D&limit=100 "HTTP/1.1 200 OK"
+2025-07-08 00:53:45,281 - httpx - INFO - HTTP Request: GET https://clob.polymarket.com/markets?next_cursor=MTM1MDA%3D&limit=100 "HTTP/1.1 200 OK"
+2025-07-08 00:53:46,697 - httpx - INFO - HTTP Request: GET https://clob.polymarket.com/markets?next_cursor=MTQwMDA%3D&limit=100 "HTTP/1.1 200 OK"
+2025-07-08 00:53:47,893 - httpx - INFO - HTTP Request: GET https://clob.polymarket.com/markets?next_cursor=MTQ1MDA%3D&limit=100 "HTTP/1.1 200 OK"
+2025-07-08 00:53:49,313 - httpx - INFO - HTTP Request: GET https://clob.polymarket.com/markets?next_cursor=MTUwMDA%3D&limit=100 "HTTP/1.1 200 OK"
+2025-07-08 00:53:50,718 - httpx - INFO - HTTP Request: GET https://clob.polymarket.com/markets?next_cursor=MTU1MDA%3D&limit=100 "HTTP/1.1 200 OK"
+2025-07-08 00:53:51,921 - httpx - INFO - HTTP Request: GET https://clob.polymarket.com/markets?next_cursor=MTYwMDA%3D&limit=100 "HTTP/1.1 200 OK"
+2025-07-08 00:53:53,306 - httpx - INFO - HTTP Request: GET https://clob.polymarket.com/markets?next_cursor=MTY1MDA%3D&limit=100 "HTTP/1.1 200 OK"
+2025-07-08 00:53:54,464 - httpx - INFO - HTTP Request: GET https://clob.polymarket.com/markets?next_cursor=MTcwMDA%3D&limit=100 "HTTP/1.1 200 OK"
+2025-07-08 00:53:55,619 - httpx - INFO - HTTP Request: GET https://clob.polymarket.com/markets?next_cursor=MTc1MDA%3D&limit=100 "HTTP/1.1 200 OK"
+2025-07-08 00:53:56,778 - httpx - INFO - HTTP Request: GET https://clob.polymarket.com/markets?next_cursor=MTgwMDA%3D&limit=100 "HTTP/1.1 200 OK"
+2025-07-08 00:53:57,926 - httpx - INFO - HTTP Request: GET https://clob.polymarket.com/markets?next_cursor=MTg1MDA%3D&limit=100 "HTTP/1.1 200 OK"
+2025-07-08 00:53:59,081 - httpx - INFO - HTTP Request: GET https://clob.polymarket.com/markets?next_cursor=MTkwMDA%3D&limit=100 "HTTP/1.1 200 OK"
+2025-07-08 00:54:00,492 - httpx - INFO - HTTP Request: GET https://clob.polymarket.com/markets?next_cursor=MTk1MDA%3D&limit=100 "HTTP/1.1 200 OK"
+2025-07-08 00:54:01,943 - httpx - INFO - HTTP Request: GET https://clob.polymarket.com/markets?next_cursor=MjAwMDA%3D&limit=100 "HTTP/1.1 200 OK"
+2025-07-08 00:54:03,110 - httpx - INFO - HTTP Request: GET https://clob.polymarket.com/markets?next_cursor=MjA1MDA%3D&limit=100 "HTTP/1.1 200 OK"
+2025-07-08 00:54:04,311 - httpx - INFO - HTTP Request: GET https://clob.polymarket.com/markets?next_cursor=MjEwMDA%3D&limit=100 "HTTP/1.1 200 OK"
+2025-07-08 00:54:05,719 - httpx - INFO - HTTP Request: GET https://clob.polymarket.com/markets?next_cursor=MjE1MDA%3D&limit=100 "HTTP/1.1 200 OK"
+2025-07-08 00:54:07,117 - httpx - INFO - HTTP Request: GET https://clob.polymarket.com/markets?next_cursor=MjIwMDA%3D&limit=100 "HTTP/1.1 200 OK"
+2025-07-08 00:54:08,534 - httpx - INFO - HTTP Request: GET https://clob.polymarket.com/markets?next_cursor=MjI1MDA%3D&limit=100 "HTTP/1.1 200 OK"
+2025-07-08 00:54:09,674 - httpx - INFO - HTTP Request: GET https://clob.polymarket.com/markets?next_cursor=MjMwMDA%3D&limit=100 "HTTP/1.1 200 OK"
+2025-07-08 00:54:11,073 - httpx - INFO - HTTP Request: GET https://clob.polymarket.com/markets?next_cursor=MjM1MDA%3D&limit=100 "HTTP/1.1 200 OK"
+2025-07-08 00:54:12,220 - httpx - INFO - HTTP Request: GET https://clob.polymarket.com/markets?next_cursor=MjQwMDA%3D&limit=100 "HTTP/1.1 200 OK"
+2025-07-08 00:54:13,675 - httpx - INFO - HTTP Request: GET https://clob.polymarket.com/markets?next_cursor=MjQ1MDA%3D&limit=100 "HTTP/1.1 200 OK"
+2025-07-08 00:54:15,090 - httpx - INFO - HTTP Request: GET https://clob.polymarket.com/markets?next_cursor=MjUwMDA%3D&limit=100 "HTTP/1.1 200 OK"
+2025-07-08 00:54:16,271 - httpx - INFO - HTTP Request: GET https://clob.polymarket.com/markets?next_cursor=MjU1MDA%3D&limit=100 "HTTP/1.1 200 OK"
+2025-07-08 00:54:17,653 - httpx - INFO - HTTP Request: GET https://clob.polymarket.com/markets?next_cursor=MjYwMDA%3D&limit=100 "HTTP/1.1 200 OK"
+2025-07-08 00:54:18,820 - httpx - INFO - HTTP Request: GET https://clob.polymarket.com/markets?next_cursor=MjY1MDA%3D&limit=100 "HTTP/1.1 200 OK"
+2025-07-08 00:54:19,965 - httpx - INFO - HTTP Request: GET https://clob.polymarket.com/markets?next_cursor=MjcwMDA%3D&limit=100 "HTTP/1.1 200 OK"
+2025-07-08 00:54:21,372 - httpx - INFO - HTTP Request: GET https://clob.polymarket.com/markets?next_cursor=Mjc1MDA%3D&limit=100 "HTTP/1.1 200 OK"
+2025-07-08 00:54:22,530 - httpx - INFO - HTTP Request: GET https://clob.polymarket.com/markets?next_cursor=MjgwMDA%3D&limit=100 "HTTP/1.1 200 OK"
+2025-07-08 00:54:23,927 - httpx - INFO - HTTP Request: GET https://clob.polymarket.com/markets?next_cursor=Mjg1MDA%3D&limit=100 "HTTP/1.1 200 OK"
+2025-07-08 00:54:25,082 - httpx - INFO - HTTP Request: GET https://clob.polymarket.com/markets?next_cursor=MjkwMDA%3D&limit=100 "HTTP/1.1 200 OK"
+2025-07-08 00:54:26,229 - httpx - INFO - HTTP Request: GET https://clob.polymarket.com/markets?next_cursor=Mjk1MDA%3D&limit=100 "HTTP/1.1 200 OK"
+2025-07-08 00:54:27,349 - src.clients.polymarket.client - INFO - Fetched 321 active markets before filtering
+2025-07-08 00:54:27,349 - src.utils.market_filters - INFO - Starting with 321 markets
+2025-07-08 00:54:27,351 - src.utils.market_filters - INFO - After time filter: 38 markets
+2025-07-08 00:54:27,351 - src.utils.market_filters - INFO - Markets sorted by volume (highest first)
+2025-07-08 00:54:27,351 - src.utils.market_filters - INFO - Final filtered result: 38 markets
+2025-07-08 00:54:27,351 - src.clients.polymarket.client - INFO - Returning 38 markets after filtering and limiting
+2025-07-08 00:54:27,351 - src.clients.polymarket.client - INFO - Filter summary: Active filters: Time horizon: closing_soon | Sorted by volume (highest first)
+2025-07-08 00:54:29,220 - httpx - INFO - HTTP Request: GET https://newsapi.org/v2/everything?language=en&sortBy=publishedAt&pageSize=50&page=1&q=election+OR+vote+OR+poll+OR+candidate+OR+president&from=2025-07-07T00%3A54%3A28.942148 "HTTP/1.1 200 OK"
+2025-07-08 00:54:29,570 - httpx - INFO - HTTP Request: GET https://newsapi.org/v2/everything?language=en&sortBy=publishedAt&pageSize=50&page=1&q=cryptocurrency+OR+bitcoin+OR+crypto+OR+blockchain&from=2025-07-07T00%3A54%3A28.942148 "HTTP/1.1 200 OK"
+2025-07-08 00:54:29,914 - httpx - INFO - HTTP Request: GET https://newsapi.org/v2/everything?language=en&sortBy=publishedAt&pageSize=50&page=1&q=stock+market+OR+economy+OR+recession+OR+inflation&from=2025-07-07T00%3A54%3A28.942148 "HTTP/1.1 200 OK"
+2025-07-08 00:54:30,257 - httpx - INFO - HTTP Request: GET https://newsapi.org/v2/everything?language=en&sortBy=publishedAt&pageSize=50&page=1&q=climate+OR+weather+OR+hurricane+OR+earthquake&from=2025-07-07T00%3A54%3A28.942148 "HTTP/1.1 200 OK"
+2025-07-08 00:54:30,597 - httpx - INFO - HTTP Request: GET https://newsapi.org/v2/everything?language=en&sortBy=publishedAt&pageSize=50&page=1&q=sports+championship+OR+tournament+OR+olympics&from=2025-07-07T00%3A54%3A28.942148 "HTTP/1.1 200 OK"
+2025-07-08 00:54:30,944 - httpx - INFO - HTTP Request: GET https://newsapi.org/v2/everything?language=en&sortBy=publishedAt&pageSize=50&page=1&q=AI+OR+artificial+intelligence+OR+technology&from=2025-07-07T00%3A54%3A28.942148 "HTTP/1.1 200 OK"
+2025-07-08 00:54:31,284 - httpx - INFO - HTTP Request: GET https://newsapi.org/v2/everything?language=en&sortBy=publishedAt&pageSize=50&page=1&q=policy+OR+regulation+OR+law+OR+legislation&from=2025-07-07T00%3A54%3A28.942148 "HTTP/1.1 200 OK"
+2025-07-08 00:54:31,393 - src.utils.prediction_tracker - INFO - Logged prediction for 0x290e8e125c5f8523f21500cc59c186f2c23762da51eec212c9dd956e5dabae3b: YES
+2025-07-08 00:54:31,394 - src.utils.prediction_tracker - INFO - Logged prediction for 0x79d3dd10febe982a33c279ef96ec5521bf73f0e54df3d332d46ebf7ce7221e3c: YES
+2025-07-08 00:54:31,395 - src.utils.prediction_tracker - INFO - Logged prediction for 0xc634b556b8f47434d7837594ff59c9daea654c4d5c9c50e2a352736db1d5c656: YES
+2025-07-08 00:54:31,395 - src.utils.prediction_tracker - INFO - Logged prediction for 0x6305af093bee55cfc31252a2ee4fac4b5af533b4884fda44978a1dfc8354343b: YES
+2025-07-08 00:54:31,396 - src.utils.prediction_tracker - INFO - Logged prediction for 0x62b6cde136dde43f72ef7335b3292b422e6ba7dbe22fd903de90f290ad621ed6: YES
+2025-07-08 00:54:31,396 - src.utils.prediction_tracker - INFO - Logged prediction for 0xc34088962ec599eac20aa670acffeb7f983e4b42b61f37a68e7586afc90964e6: YES
+2025-07-08 00:54:31,396 - src.utils.prediction_tracker - INFO - Logged prediction for 0xaa01d293f90d81088f3764b971476b6576c5d32f4eb19e2759ee99ddc3b03299: YES
+2025-07-08 00:54:31,396 - src.utils.prediction_tracker - INFO - Logged prediction for 0x4500d7f5d2bdbd77ec002a4b901436f0007ac189e08a254c16a13a5885503e04: YES
+2025-07-08 00:54:31,396 - src.utils.prediction_tracker - INFO - Logged prediction for 0x56d03f7bfd1a2c12e30dbeb6bb208041016e9dc68641e7fd1a879f928f0218d1: NO
+2025-07-08 00:54:31,397 - src.utils.prediction_tracker - INFO - Logged prediction for 0x7035c84a7aef6d1cca690edf2755cc3fdaef2faef1be1e28ef9066072a50dcb1: YES
+2025-07-08 00:54:31,398 - src.utils.prediction_tracker - INFO - Logged prediction for 0xff65ddeb5485e8d132a033c29b3022a68527396540df7265e285eec184041d66: YES
+2025-07-08 00:54:31,398 - src.utils.prediction_tracker - INFO - Logged prediction for 0x93f4c7d110f2ac9752f56bc448d81f393c439ee96e4342898c9c5e535bb08e4a: YES
+2025-07-08 00:54:31,399 - src.utils.prediction_tracker - INFO - Logged prediction for 0x2646006ad10359ee382cc69bb21d62d62819b8243b36acef61b126e39c043bf6: YES
+2025-07-08 00:54:31,403 - src.utils.prediction_tracker - INFO - Logged prediction for 0x06b308bbc7b2a33ecad46d3d25d6699eec81bebeac8d228742f0c533a0ed2334: YES
+2025-07-08 00:54:31,404 - src.utils.prediction_tracker - INFO - Logged prediction for 0x32ab862e1e507d142ee256565e4079b1cbd9f3c38a3adaeca39fbc4df0860a08: YES
+2025-07-08 00:54:31,404 - src.utils.prediction_tracker - INFO - Logged prediction for 0xa098fb43ccb6df8f60c407352f9a3fb5c7327773b40258c0cce23a589db4f7c6: YES
+2025-07-08 00:54:31,405 - src.utils.prediction_tracker - INFO - Logged prediction for 0xa32b132cde8b8c656cd6c126ed2b0e96c692c3b9443dd41072c966fa28f6de46: YES
+2025-07-08 00:54:31,405 - src.utils.prediction_tracker - INFO - Logged prediction for 0xb82d5aec1ad294e21e835cee5ecf2f56ec40ddc925d7f30d6a7831d1679505c5: NO
+2025-07-08 00:54:31,407 - src.utils.prediction_tracker - INFO - Logged prediction for 0xf9e277c2e86f21c20388a587540501947c4f4a1337c7aa1e14b3211c58c0d3f0: YES
+2025-07-08 00:54:31,408 - src.utils.prediction_tracker - INFO - Logged prediction for 0xb55fdad84ac4bb380b21a60fdc7442b0d74c9947c6f9cb801690cc9d0151f9a5: YES
+2025-07-08 01:00:35,513 - src.console.chat - ERROR - Error in chat session: can't subtract offset-naive and offset-aware datetimes
+2025-07-08 01:00:35,576 - src.console.chat - ERROR - Error in chat session: can't subtract offset-naive and offset-aware datetimes
+2025-07-08 01:00:35,627 - src.console.chat - ERROR - Error in chat session: can't subtract offset-naive and offset-aware datetimes
+2025-07-08 01:00:35,729 - src.console.chat - ERROR - Error in chat session: can't subtract offset-naive and offset-aware datetimes
+2025-07-08 01:00:36,221 - src.console.chat - ERROR - Error in chat session: can't subtract offset-naive and offset-aware datetimes
+2025-07-08 01:01:27,628 - httpx - INFO - HTTP Request: GET https://clob.polymarket.com/markets?limit=100 "HTTP/1.1 200 OK"
+2025-07-08 01:01:29,025 - httpx - INFO - HTTP Request: GET https://clob.polymarket.com/markets?next_cursor=NTAw&limit=100 "HTTP/1.1 200 OK"
+2025-07-08 01:01:30,239 - httpx - INFO - HTTP Request: GET https://clob.polymarket.com/markets?next_cursor=MTAwMA%3D%3D&limit=100 "HTTP/1.1 200 OK"
+2025-07-08 01:01:31,412 - httpx - INFO - HTTP Request: GET https://clob.polymarket.com/markets?next_cursor=MTUwMA%3D%3D&limit=100 "HTTP/1.1 200 OK"
+2025-07-08 01:01:32,558 - httpx - INFO - HTTP Request: GET https://clob.polymarket.com/markets?next_cursor=MjAwMA%3D%3D&limit=100 "HTTP/1.1 200 OK"
+2025-07-08 01:01:33,706 - httpx - INFO - HTTP Request: GET https://clob.polymarket.com/markets?next_cursor=MjUwMA%3D%3D&limit=100 "HTTP/1.1 200 OK"
+2025-07-08 01:01:34,845 - httpx - INFO - HTTP Request: GET https://clob.polymarket.com/markets?next_cursor=MzAwMA%3D%3D&limit=100 "HTTP/1.1 200 OK"
+2025-07-08 01:01:36,273 - httpx - INFO - HTTP Request: GET https://clob.polymarket.com/markets?next_cursor=MzUwMA%3D%3D&limit=100 "HTTP/1.1 200 OK"
+2025-07-08 01:01:37,416 - httpx - INFO - HTTP Request: GET https://clob.polymarket.com/markets?next_cursor=NDAwMA%3D%3D&limit=100 "HTTP/1.1 200 OK"
+2025-07-08 01:01:38,804 - httpx - INFO - HTTP Request: GET https://clob.polymarket.com/markets?next_cursor=NDUwMA%3D%3D&limit=100 "HTTP/1.1 200 OK"
+2025-07-08 01:01:40,201 - httpx - INFO - HTTP Request: GET https://clob.polymarket.com/markets?next_cursor=NTAwMA%3D%3D&limit=100 "HTTP/1.1 200 OK"
+2025-07-08 01:01:41,683 - httpx - INFO - HTTP Request: GET https://clob.polymarket.com/markets?next_cursor=NTUwMA%3D%3D&limit=100 "HTTP/1.1 200 OK"
+2025-07-08 01:01:43,084 - httpx - INFO - HTTP Request: GET https://clob.polymarket.com/markets?next_cursor=NjAwMA%3D%3D&limit=100 "HTTP/1.1 200 OK"
+2025-07-08 01:01:44,508 - httpx - INFO - HTTP Request: GET https://clob.polymarket.com/markets?next_cursor=NjUwMA%3D%3D&limit=100 "HTTP/1.1 200 OK"
+2025-07-08 01:01:45,700 - httpx - INFO - HTTP Request: GET https://clob.polymarket.com/markets?next_cursor=NzAwMA%3D%3D&limit=100 "HTTP/1.1 200 OK"
+2025-07-08 01:01:47,127 - httpx - INFO - HTTP Request: GET https://clob.polymarket.com/markets?next_cursor=NzUwMA%3D%3D&limit=100 "HTTP/1.1 200 OK"
+2025-07-08 01:01:48,544 - httpx - INFO - HTTP Request: GET https://clob.polymarket.com/markets?next_cursor=ODAwMA%3D%3D&limit=100 "HTTP/1.1 200 OK"
+2025-07-08 01:01:49,940 - httpx - INFO - HTTP Request: GET https://clob.polymarket.com/markets?next_cursor=ODUwMA%3D%3D&limit=100 "HTTP/1.1 200 OK"
+2025-07-08 01:01:51,348 - httpx - INFO - HTTP Request: GET https://clob.polymarket.com/markets?next_cursor=OTAwMA%3D%3D&limit=100 "HTTP/1.1 200 OK"
+2025-07-08 01:01:52,757 - httpx - INFO - HTTP Request: GET https://clob.polymarket.com/markets?next_cursor=OTUwMA%3D%3D&limit=100 "HTTP/1.1 200 OK"
+2025-07-08 01:01:53,907 - httpx - INFO - HTTP Request: GET https://clob.polymarket.com/markets?next_cursor=MTAwMDA%3D&limit=100 "HTTP/1.1 200 OK"
+2025-07-08 01:01:55,060 - httpx - INFO - HTTP Request: GET https://clob.polymarket.com/markets?next_cursor=MTA1MDA%3D&limit=100 "HTTP/1.1 200 OK"
+2025-07-08 01:01:56,452 - httpx - INFO - HTTP Request: GET https://clob.polymarket.com/markets?next_cursor=MTEwMDA%3D&limit=100 "HTTP/1.1 200 OK"
+2025-07-08 01:01:57,887 - httpx - INFO - HTTP Request: GET https://clob.polymarket.com/markets?next_cursor=MTE1MDA%3D&limit=100 "HTTP/1.1 200 OK"
+2025-07-08 01:01:59,034 - httpx - INFO - HTTP Request: GET https://clob.polymarket.com/markets?next_cursor=MTIwMDA%3D&limit=100 "HTTP/1.1 200 OK"
+2025-07-08 01:02:00,465 - httpx - INFO - HTTP Request: GET https://clob.polymarket.com/markets?next_cursor=MTI1MDA%3D&limit=100 "HTTP/1.1 200 OK"
+2025-07-08 01:02:01,853 - httpx - INFO - HTTP Request: GET https://clob.polymarket.com/markets?next_cursor=MTMwMDA%3D&limit=100 "HTTP/1.1 200 OK"
+2025-07-08 01:02:03,267 - httpx - INFO - HTTP Request: GET https://clob.polymarket.com/markets?next_cursor=MTM1MDA%3D&limit=100 "HTTP/1.1 200 OK"
+2025-07-08 01:02:04,663 - httpx - INFO - HTTP Request: GET https://clob.polymarket.com/markets?next_cursor=MTQwMDA%3D&limit=100 "HTTP/1.1 200 OK"
+2025-07-08 01:02:05,828 - httpx - INFO - HTTP Request: GET https://clob.polymarket.com/markets?next_cursor=MTQ1MDA%3D&limit=100 "HTTP/1.1 200 OK"
+2025-07-08 01:02:07,245 - httpx - INFO - HTTP Request: GET https://clob.polymarket.com/markets?next_cursor=MTUwMDA%3D&limit=100 "HTTP/1.1 200 OK"
+2025-07-08 01:02:08,649 - httpx - INFO - HTTP Request: GET https://clob.polymarket.com/markets?next_cursor=MTU1MDA%3D&limit=100 "HTTP/1.1 200 OK"
+2025-07-08 01:02:09,803 - httpx - INFO - HTTP Request: GET https://clob.polymarket.com/markets?next_cursor=MTYwMDA%3D&limit=100 "HTTP/1.1 200 OK"
+2025-07-08 01:02:11,199 - httpx - INFO - HTTP Request: GET https://clob.polymarket.com/markets?next_cursor=MTY1MDA%3D&limit=100 "HTTP/1.1 200 OK"
+2025-07-08 01:02:12,414 - httpx - INFO - HTTP Request: GET https://clob.polymarket.com/markets?next_cursor=MTcwMDA%3D&limit=100 "HTTP/1.1 200 OK"
+2025-07-08 01:02:13,603 - httpx - INFO - HTTP Request: GET https://clob.polymarket.com/markets?next_cursor=MTc1MDA%3D&limit=100 "HTTP/1.1 200 OK"
+2025-07-08 01:02:15,017 - httpx - INFO - HTTP Request: GET https://clob.polymarket.com/markets?next_cursor=MTgwMDA%3D&limit=100 "HTTP/1.1 200 OK"
+2025-07-08 01:02:16,163 - httpx - INFO - HTTP Request: GET https://clob.polymarket.com/markets?next_cursor=MTg1MDA%3D&limit=100 "HTTP/1.1 200 OK"
+2025-07-08 01:02:17,323 - httpx - INFO - HTTP Request: GET https://clob.polymarket.com/markets?next_cursor=MTkwMDA%3D&limit=100 "HTTP/1.1 200 OK"
+2025-07-08 01:02:18,713 - httpx - INFO - HTTP Request: GET https://clob.polymarket.com/markets?next_cursor=MTk1MDA%3D&limit=100 "HTTP/1.1 200 OK"
+2025-07-08 01:02:20,128 - httpx - INFO - HTTP Request: GET https://clob.polymarket.com/markets?next_cursor=MjAwMDA%3D&limit=100 "HTTP/1.1 200 OK"
+2025-07-08 01:02:21,278 - httpx - INFO - HTTP Request: GET https://clob.polymarket.com/markets?next_cursor=MjA1MDA%3D&limit=100 "HTTP/1.1 200 OK"
+2025-07-08 01:02:22,464 - httpx - INFO - HTTP Request: GET https://clob.polymarket.com/markets?next_cursor=MjEwMDA%3D&limit=100 "HTTP/1.1 200 OK"
+2025-07-08 01:02:23,858 - httpx - INFO - HTTP Request: GET https://clob.polymarket.com/markets?next_cursor=MjE1MDA%3D&limit=100 "HTTP/1.1 200 OK"
+2025-07-08 01:02:25,268 - httpx - INFO - HTTP Request: GET https://clob.polymarket.com/markets?next_cursor=MjIwMDA%3D&limit=100 "HTTP/1.1 200 OK"
+2025-07-08 01:02:26,673 - httpx - INFO - HTTP Request: GET https://clob.polymarket.com/markets?next_cursor=MjI1MDA%3D&limit=100 "HTTP/1.1 200 OK"
+2025-07-08 01:02:27,830 - httpx - INFO - HTTP Request: GET https://clob.polymarket.com/markets?next_cursor=MjMwMDA%3D&limit=100 "HTTP/1.1 200 OK"
+2025-07-08 01:02:29,216 - httpx - INFO - HTTP Request: GET https://clob.polymarket.com/markets?next_cursor=MjM1MDA%3D&limit=100 "HTTP/1.1 200 OK"
+2025-07-08 01:02:30,371 - httpx - INFO - HTTP Request: GET https://clob.polymarket.com/markets?next_cursor=MjQwMDA%3D&limit=100 "HTTP/1.1 200 OK"
+2025-07-08 01:02:31,774 - httpx - INFO - HTTP Request: GET https://clob.polymarket.com/markets?next_cursor=MjQ1MDA%3D&limit=100 "HTTP/1.1 200 OK"
+2025-07-08 01:02:33,195 - httpx - INFO - HTTP Request: GET https://clob.polymarket.com/markets?next_cursor=MjUwMDA%3D&limit=100 "HTTP/1.1 200 OK"
+2025-07-08 01:02:34,339 - httpx - INFO - HTTP Request: GET https://clob.polymarket.com/markets?next_cursor=MjU1MDA%3D&limit=100 "HTTP/1.1 200 OK"
+2025-07-08 01:02:35,746 - httpx - INFO - HTTP Request: GET https://clob.polymarket.com/markets?next_cursor=MjYwMDA%3D&limit=100 "HTTP/1.1 200 OK"
+2025-07-08 01:02:36,915 - httpx - INFO - HTTP Request: GET https://clob.polymarket.com/markets?next_cursor=MjY1MDA%3D&limit=100 "HTTP/1.1 200 OK"
+2025-07-08 01:02:38,073 - httpx - INFO - HTTP Request: GET https://clob.polymarket.com/markets?next_cursor=MjcwMDA%3D&limit=100 "HTTP/1.1 200 OK"
+2025-07-08 01:02:39,493 - httpx - INFO - HTTP Request: GET https://clob.polymarket.com/markets?next_cursor=Mjc1MDA%3D&limit=100 "HTTP/1.1 200 OK"
+2025-07-08 01:02:40,675 - httpx - INFO - HTTP Request: GET https://clob.polymarket.com/markets?next_cursor=MjgwMDA%3D&limit=100 "HTTP/1.1 200 OK"
+2025-07-08 01:02:42,083 - httpx - INFO - HTTP Request: GET https://clob.polymarket.com/markets?next_cursor=Mjg1MDA%3D&limit=100 "HTTP/1.1 200 OK"
+2025-07-08 01:02:43,241 - httpx - INFO - HTTP Request: GET https://clob.polymarket.com/markets?next_cursor=MjkwMDA%3D&limit=100 "HTTP/1.1 200 OK"
+2025-07-08 01:02:44,383 - httpx - INFO - HTTP Request: GET https://clob.polymarket.com/markets?next_cursor=Mjk1MDA%3D&limit=100 "HTTP/1.1 200 OK"
+2025-07-08 01:02:45,492 - src.clients.polymarket.client - INFO - Fetched 321 active markets before filtering
+2025-07-08 01:02:45,492 - src.utils.market_filters - INFO - Starting with 321 markets
+2025-07-08 01:02:45,493 - src.utils.market_filters - INFO - After time filter: 10 markets
+2025-07-08 01:02:45,493 - src.utils.market_filters - INFO - Markets sorted by volume (highest first)
+2025-07-08 01:02:45,493 - src.utils.market_filters - INFO - Final filtered result: 10 markets
+2025-07-08 01:02:45,493 - src.clients.polymarket.client - INFO - Returning 10 markets after filtering and limiting
+2025-07-08 01:02:45,494 - src.clients.polymarket.client - INFO - Filter summary: Active filters: Time horizon: closing_soon | Max days: 2 | Sorted by volume (highest first)
+2025-07-08 01:02:46,785 - httpx - INFO - HTTP Request: GET https://newsapi.org/v2/everything?language=en&sortBy=publishedAt&pageSize=50&page=1&q=election+OR+vote+OR+poll+OR+candidate+OR+president&from=2025-07-07T01%3A02%3A45.749662 "HTTP/1.1 200 OK"
+2025-07-08 01:02:47,127 - httpx - INFO - HTTP Request: GET https://newsapi.org/v2/everything?language=en&sortBy=publishedAt&pageSize=50&page=1&q=cryptocurrency+OR+bitcoin+OR+crypto+OR+blockchain&from=2025-07-07T01%3A02%3A45.749662 "HTTP/1.1 200 OK"
+2025-07-08 01:02:47,470 - httpx - INFO - HTTP Request: GET https://newsapi.org/v2/everything?language=en&sortBy=publishedAt&pageSize=50&page=1&q=stock+market+OR+economy+OR+recession+OR+inflation&from=2025-07-07T01%3A02%3A45.749662 "HTTP/1.1 200 OK"
+2025-07-08 01:02:47,811 - httpx - INFO - HTTP Request: GET https://newsapi.org/v2/everything?language=en&sortBy=publishedAt&pageSize=50&page=1&q=climate+OR+weather+OR+hurricane+OR+earthquake&from=2025-07-07T01%3A02%3A45.749662 "HTTP/1.1 200 OK"
+2025-07-08 01:02:48,155 - httpx - INFO - HTTP Request: GET https://newsapi.org/v2/everything?language=en&sortBy=publishedAt&pageSize=50&page=1&q=sports+championship+OR+tournament+OR+olympics&from=2025-07-07T01%3A02%3A45.749662 "HTTP/1.1 200 OK"
+2025-07-08 01:02:48,506 - httpx - INFO - HTTP Request: GET https://newsapi.org/v2/everything?language=en&sortBy=publishedAt&pageSize=50&page=1&q=AI+OR+artificial+intelligence+OR+technology&from=2025-07-07T01%3A02%3A45.749662 "HTTP/1.1 200 OK"
+2025-07-08 01:02:48,891 - httpx - INFO - HTTP Request: GET https://newsapi.org/v2/everything?language=en&sortBy=publishedAt&pageSize=50&page=1&q=policy+OR+regulation+OR+law+OR+legislation&from=2025-07-07T01%3A02%3A45.749662 "HTTP/1.1 200 OK"

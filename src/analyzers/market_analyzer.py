@@ -9,6 +9,7 @@ from datetime import datetime, timedelta
 from typing import List, Optional
 
 from src.analyzers.models import AnalysisResult, MarketOpportunity, OpportunityScore
+from src.analyzers.fair_value_engine import FairValueEngine
 from src.clients.news.models import NewsArticle
 from src.clients.polymarket.models import Market, MarketPrice
 from src.config.settings import settings
@@ -25,6 +26,7 @@ class MarketAnalyzer:
         """Initialize market analyzer."""
         self.min_volume = settings.min_market_volume
         self.min_spread = settings.min_probability_spread
+        self.fair_value_engine = FairValueEngine()
         
     def analyze_markets(
         self,
@@ -71,7 +73,7 @@ class MarketAnalyzer:
             news_articles_processed=len(news_articles)
         )
         
-    def _analyze_single_market(
+    async def _analyze_single_market(
         self,
         market: Market,
         price: Optional[MarketPrice],
@@ -95,12 +97,14 @@ class MarketAnalyzer:
         if market.volume and market.volume < self.min_volume:
             return None
             
-        # Calculate fair price based on available information
-        fair_prices = self._calculate_fair_prices(market, news_articles)
-        if not fair_prices:
+        # Calculate sophisticated fair prices using new engine
+        try:
+            fair_yes_price, fair_no_price, fair_value_reasoning = self.fair_value_engine.calculate_fair_value(
+                market, news_articles
+            )
+        except Exception as e:
+            logger.error(f"Fair value calculation failed for {market.condition_id}: {e}")
             return None
-            
-        fair_yes_price, fair_no_price = fair_prices
         
         # Check if there's a significant opportunity
         yes_opportunity = abs(fair_yes_price - price.yes_price)
@@ -152,9 +156,9 @@ class MarketAnalyzer:
         # Find related news
         related_news = self._find_related_news(market, news_articles)
         
-        # Generate reasoning
+        # Generate reasoning (now includes sophisticated fair value analysis)
         reasoning = self._generate_reasoning(
-            market, price, fair_yes_price, fair_no_price, related_news
+            market, price, fair_yes_price, fair_no_price, related_news, fair_value_reasoning
         )
         
         return MarketOpportunity(
@@ -526,7 +530,8 @@ class MarketAnalyzer:
         price: MarketPrice,
         fair_yes_price: float,
         fair_no_price: float,
-        related_news: List[NewsArticle]
+        related_news: List[NewsArticle],
+        fair_value_reasoning: str = ""
     ) -> str:
         """
         Generate comprehensive human-readable reasoning for the analysis.
@@ -542,6 +547,10 @@ class MarketAnalyzer:
             str: Detailed analysis reasoning
         """
         reasoning_parts = []
+        
+        # Start with sophisticated fair value analysis
+        if fair_value_reasoning:
+            reasoning_parts.append(f"Fair Value Analysis: {fair_value_reasoning}")
         
         # Price analysis with confidence metrics
         yes_diff = fair_yes_price - price.yes_price

@@ -37,6 +37,12 @@ class Settings(BaseSettings):
         description="NewsAPI base URL"
     )
     
+    # Claude API Configuration
+    claude_api_key: Optional[str] = Field(
+        default=None,
+        description="Claude API key for LLM-powered news analysis"
+    )
+    
     # Application Configuration
     log_level: str = Field(
         default="INFO",
