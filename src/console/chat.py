@@ -3,7 +3,6 @@ Interactive chat interface for market analysis.
 """
 
 import logging
-import asyncio
 from typing import List
 
 from rich.console import Console
@@ -96,6 +95,13 @@ class MarketChatSession:
 • "How reliable is this analysis?"
 • "What could change your recommendation?"
 
+[bold yellow]Enhanced Data Search:[/bold yellow]
+• "Search for recent developments"
+• "Find more information about this topic"
+• "What's the latest news on this?"
+• "Give me comprehensive analysis"
+• "Show me political context"
+
 [bold yellow]Risk & Return Questions:[/bold yellow]
 • "What are the main risks here?"
 • "How does this compare to other opportunities?"
@@ -139,8 +145,10 @@ class MarketChatSession:
             response = self._explain_confidence()
         elif any(word in question_lower for word in ["risk", "risks", "dangerous", "safe"]):
             response = self._explain_risks()
-        elif any(word in question_lower for word in ["news", "headlines", "events"]):
+        elif any(word in question_lower for word in ["news", "headlines", "events", "search", "find", "latest", "recent"]):
             response = self._explain_news_impact()
+        elif any(word in question_lower for word in ["data", "information", "research", "analysis", "more"]):
+            response = self._provide_comprehensive_analysis()
         elif any(word in question_lower for word in ["score", "scoring", "rating"]):
             response = self._explain_scoring()
         elif any(word in question_lower for word in ["liquidity", "volume", "trade"]):
@@ -149,6 +157,8 @@ class MarketChatSession:
             response = self._explain_timing()
         elif any(word in question_lower for word in ["compare", "similar", "other"]):
             response = self._explain_comparison()
+        elif any(word in question_lower for word in ["context", "political", "background"]):
+            response = self._explain_market_context()
         else:
             response = self._general_analysis(question)
             
@@ -573,12 +583,12 @@ For more specific insights, try asking about risks, scoring, news impact, or tim
             logger.error(f"Error searching web for news: {e}")
             return ""
             
-    def _perform_web_search(self, query: str) -> str:
+    def _perform_web_search(self, search_query: str) -> str:
         """
         Perform actual web search for news.
         
         Args:
-            query: Search query string
+            search_query: Search query string
             
         Returns:
             str: Formatted search results
@@ -719,6 +729,83 @@ For more specific insights, try asking about risks, scoring, news impact, or tim
 - **Timeline Factors:** Political processes have built-in delays and procedures
 - **Opposition Response:** Counter-actions from opposing parties expected
 - **Public Opinion:** Voter sentiment can shift based on real-world impacts
+"""
+        
+    def _provide_comprehensive_analysis(self) -> str:
+        """
+        Provide comprehensive analysis combining all available data sources.
+        
+        Returns:
+            str: Comprehensive analysis
+        """
+        # Gather all available information
+        news_analysis = self._search_web_for_news()
+        political_context = self._get_political_context() if self._is_political_market() else ""
+        
+        return f"""
+## Comprehensive Market Analysis
+
+**🔍 Enhanced Data Search Results:**
+{news_analysis if news_analysis else "No additional news sources found"}
+
+{political_context}
+
+**📊 Complete Market Assessment:**
+- **Current Price Gap:** {abs(self.opportunity.fair_yes_price - self.opportunity.current_yes_price):.1%} price discrepancy detected
+- **Market Efficiency:** {"Low" if abs(self.opportunity.fair_yes_price - self.opportunity.current_yes_price) > 0.1 else "High"} based on price alignment
+- **Information Quality:** {self.opportunity.score.news_relevance_score:.1%} news coverage score
+- **Time Sensitivity:** {self.opportunity.score.time_score:.1%} time factor (closer resolution = higher score)
+
+**🎯 Key Factors Driving Analysis:**
+{self.opportunity.reasoning}
+
+**💡 Strategic Insights:**
+- This market appears to be {"undervalued" if self.opportunity.expected_return > 0 else "overvalued"} by approximately {abs(self.opportunity.expected_return):.1f}%
+- Risk-adjusted confidence suggests {"strong" if self.opportunity.score.confidence_score > 0.7 else "moderate" if self.opportunity.score.confidence_score > 0.5 else "weak"} conviction
+- Volume analysis indicates {"high" if self.opportunity.volume and self.opportunity.volume > 10000 else "moderate" if self.opportunity.volume and self.opportunity.volume > 1000 else "low"} market liquidity
+
+**⚠️ Risk Considerations:**
+- Market volatility risk: {self.opportunity.risk_level}
+- Information gaps: {"Minimal" if len(self.opportunity.related_news) > 2 else "Significant"} news coverage
+- Time horizon risk: {"Low" if self.opportunity.score.time_score > 0.7 else "Moderate" if self.opportunity.score.time_score > 0.5 else "High"}
+
+This comprehensive analysis combines market data, news sentiment, political context, and quantitative scoring to provide a complete picture of this opportunity.
+"""
+
+    def _explain_market_context(self) -> str:
+        """
+        Explain broader market context and background.
+        
+        Returns:
+            str: Market context explanation
+        """
+        political_context = self._get_political_context() if self._is_political_market() else ""
+        news_search = self._search_web_for_news()
+        
+        return f"""
+## Market Context & Background
+
+**📈 Market Type Analysis:**
+- **Category:** {self.opportunity.category or "General Market"}
+- **Market Nature:** {"Political prediction market" if self._is_political_market() else "General prediction market"}
+- **Resolution Mechanism:** {"Time-based resolution" if self.opportunity.end_date else "Event-based resolution"}
+
+{political_context}
+
+**🌐 Broader Market Environment:**
+{news_search if news_search else "Limited external context available"}
+
+**📊 Market Mechanics:**
+- **Current Spread:** {self.opportunity.current_spread:.1%} ({"Tight" if self.opportunity.current_spread < 0.05 else "Wide" if self.opportunity.current_spread > 0.15 else "Normal"} spread)
+- **Price Discovery:** Market prices suggest {"efficient" if self.opportunity.current_spread < 0.1 else "inefficient"} price discovery
+- **Arbitrage Opportunity:** {"Yes" if abs(self.opportunity.expected_return) > 10 else "Limited"} - {abs(self.opportunity.expected_return):.1f}% potential return
+
+**🔄 Market Dynamics:**
+- **Volatility:** {"High" if self.opportunity.current_spread > 0.2 else "Moderate" if self.opportunity.current_spread > 0.1 else "Low"} based on current spread
+- **Participation:** {"Active" if self.opportunity.volume and self.opportunity.volume > 5000 else "Limited"} market participation
+- **Information Flow:** {"Good" if len(self.opportunity.related_news) > 2 else "Poor"} information availability
+
+This context helps understand the broader environment affecting this market's pricing and potential outcomes.
 """
 
 

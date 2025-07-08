@@ -256,28 +256,40 @@ class DisplayManager:
 [bold cyan]Available Commands:[/bold cyan]
 
 [bold yellow]Analysis Commands:[/bold yellow]
-[green]analyze[/green]              - Run market analysis
+[green]start[/green]                - Run market analysis
 [green]top[/green]                  - Show top opportunities  
 [green]details <id>[/green]         - Show opportunity details
 [green]chat <id>[/green]            - Interactive chat about a specific market
 [green]refresh[/green]              - Refresh data and re-analyze
+
+[bold yellow]Market Filter Commands:[/bold yellow]
+[green]closing_soon[/green]         - Markets closing ≤30 days
+[green]medium_term[/green]          - Markets closing 30-90 days
+[green]long_term[/green]            - Markets closing >90 days
+[green]filter[/green]               - Show filter help & advanced options
+[green]filters[/green]              - Show current active filters
 
 [bold yellow]Tracking Commands:[/bold yellow]
 [green]metrics[/green]              - Show prediction performance metrics
 [green]predictions [days][/green]   - Show recent predictions (default: 30 days)
 [green]export <filename>[/green]    - Export predictions to CSV
 [green]resolve <id> <outcome>[/green] - Manually resolve prediction (YES/NO/INVALID)
+[green]open <condition_id>[/green]  - Open market link in browser
 
 [bold yellow]General Commands:[/bold yellow]
 [green]help[/green]                 - Show this menu
+[green]restart[/green]              - Restart app (reload all modules & clear cache)
+[green]reload[/green]               - Reload modules only (faster than restart)
+[green]watch[/green]                - Toggle auto-reload on file changes (dev mode)
 [green]quit[/green]                 - Exit application
 
 [dim]Examples:[/dim]
+[dim]  closing_soon           - Filter for markets closing ≤30 days[/dim]
+[dim]  filter keywords trump  - Only analyze Trump-related markets[/dim]
 [dim]  chat 1                 - Chat about the #1 ranked opportunity[/dim]
 [dim]  details 3              - Show details for #3 opportunity[/dim]
 [dim]  predictions 7          - Show predictions from last 7 days[/dim]
-[dim]  export predictions.csv - Export all predictions to CSV[/dim]
-[dim]  resolve ABC123 YES     - Mark prediction ABC123 as resolved with YES outcome[/dim]
+[dim]  open 12345678          - Open market link in browser[/dim]
 
 Enter command: 
         """

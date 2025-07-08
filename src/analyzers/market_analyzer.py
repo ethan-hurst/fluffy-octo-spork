@@ -109,13 +109,40 @@ class MarketAnalyzer:
         if max(yes_opportunity, no_opportunity) < self.min_spread:
             return None
             
-        # Determine recommended position
-        if yes_opportunity > no_opportunity:
-            recommended_position = "YES" if fair_yes_price > price.yes_price else "NO"
-            expected_return = (fair_yes_price - price.yes_price) / price.yes_price * 100
+        # Additional filter: Don't recommend if the opportunity would result in negative expected return
+        max_opportunity_value = max(yes_opportunity, no_opportunity)
+        if max_opportunity_value < 0.05:  # Less than 5% opportunity
+            return None
+            
+        # Calculate potential returns for both positions
+        yes_return = None
+        no_return = None
+        
+        if fair_yes_price > price.yes_price:
+            # YES is undervalued - potential profit from buying YES
+            yes_return = (fair_yes_price - price.yes_price) / price.yes_price * 100
+        
+        if fair_no_price > price.no_price:
+            # NO is undervalued - potential profit from buying NO  
+            no_return = (fair_no_price - price.no_price) / price.no_price * 100
+            
+        # Choose the position with higher expected return
+        if yes_return and no_return:
+            if yes_return > no_return:
+                recommended_position = "YES"
+                expected_return = yes_return
+            else:
+                recommended_position = "NO"
+                expected_return = no_return
+        elif yes_return:
+            recommended_position = "YES"
+            expected_return = yes_return
+        elif no_return:
+            recommended_position = "NO"
+            expected_return = no_return
         else:
-            recommended_position = "NO" if fair_no_price > price.no_price else "YES"
-            expected_return = (fair_no_price - price.no_price) / price.no_price * 100
+            # No profitable opportunity found
+            return None
             
         # Calculate scores
         score = self._calculate_opportunity_score(
@@ -135,6 +162,7 @@ class MarketAnalyzer:
             question=market.question,
             description=market.description,
             category=market.category,
+            market_slug=market.market_slug,
             current_yes_price=price.yes_price,
             current_no_price=price.no_price,
             current_spread=price.spread,
@@ -183,11 +211,11 @@ class MarketAnalyzer:
         # Time decay factor (markets closer to resolution are more reliable)
         time_factor = self._calculate_time_factor(market)
         
-        # Base probability (start with 50/50)
-        base_probability = 0.5
+        # Get base probability based on market type and current prices
+        base_probability = self._get_base_probability(market)
         
-        # Adjust based on news sentiment (-0.2 to +0.2)
-        sentiment_adjustment = news_sentiment * 0.2
+        # Adjust based on news sentiment (-0.15 to +0.15, reduced impact)
+        sentiment_adjustment = news_sentiment * 0.15
         
         # Adjust based on market category knowledge
         category_adjustment = self._get_category_adjustment(market)
@@ -289,6 +317,61 @@ class MarketAnalyzer:
         else:
             return 0.3  # Long-term market
             
+    def _get_base_probability(self, market: Market) -> float:
+        """
+        Get base probability estimate based on market type and question.
+        
+        Args:
+            market: Market to analyze
+            
+        Returns:
+            float: Base probability estimate
+        """
+        question_lower = market.question.lower()
+        
+        # For "most seats" or "win the most" type questions in multi-party systems
+        if any(phrase in question_lower for phrase in ["most seats", "win the most", "hold the most"]):
+            # Count likely competitors by looking for party names
+            party_indicators = ["ldp", "cdp", "jip", "komeito", "jcp", "sdp", "dpj", "party"]
+            if any(indicator in question_lower for indicator in party_indicators):
+                # Multi-party election - most parties have low probability
+                if any(major in question_lower for major in ["ldp", "liberal democratic", "conservative"]):
+                    return 0.35  # Major party has higher chance
+                elif any(major in question_lower for major in ["cdp", "constitutional democratic"]):
+                    return 0.25  # Main opposition
+                else:
+                    return 0.05  # Minor parties have very low chance
+                    
+        # Binary yes/no questions
+        if question_lower.startswith("will "):
+            # ETF approval questions
+            if "etf" in question_lower and "approved" in question_lower:
+                if "bitcoin" in question_lower:
+                    return 0.4  # Already established precedent
+                elif any(crypto in question_lower for crypto in ["ethereum", "litecoin"]):
+                    return 0.3  # Major cryptos
+                else:
+                    return 0.15  # Other cryptos less likely
+                    
+            # Political questions
+            if any(term in question_lower for term in ["trump", "president", "election"]):
+                return 0.45  # Political events tend to be competitive
+                
+            # Sports questions
+            if any(term in question_lower for term in ["win", "championship", "fire", "retire"]):
+                return 0.35  # Sports outcomes
+                
+            # Pandemic/crisis questions
+            if any(term in question_lower for term in ["pandemic", "crisis", "war"]):
+                return 0.2   # Major crises are relatively rare
+                
+            # Merger/business questions
+            if any(term in question_lower for term in ["merger", "acquisition", "cut", "traded"]):
+                return 0.3   # Business decisions
+                
+        # Default for unclear questions
+        return 0.5
+        
     def _get_category_adjustment(self, market: Market) -> float:
         """
         Get adjustment based on market category knowledge.

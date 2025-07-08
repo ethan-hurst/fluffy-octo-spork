@@ -53,6 +53,7 @@ class MarketOpportunity(BaseModel):
     question: str = Field(..., description="Market question")
     description: Optional[str] = Field(None, description="Market description")
     category: Optional[str] = Field(None, description="Market category")
+    market_slug: Optional[str] = Field(None, description="Market URL slug")
     
     # Market data
     current_yes_price: float = Field(..., description="Current YES price")

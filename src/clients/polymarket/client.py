@@ -113,20 +113,23 @@ class PolymarketClient:
             
     async def get_all_active_markets(self, max_markets: Optional[int] = None) -> List[Market]:
         """
-        Get all active markets, handling pagination.
+        Get all active markets with advanced filtering, handling pagination.
         
         Args:
-            max_markets: Maximum number of markets to fetch
+            max_markets: Maximum number of markets to fetch (before filtering)
             
         Returns:
-            List[Market]: List of active markets
+            List[Market]: List of filtered and sorted active markets
         """
         max_markets = max_markets or settings.max_markets_to_analyze
         all_markets = []
         next_cursor = None
         
-        while len(all_markets) < max_markets:
-            response = await self.get_markets(next_cursor=next_cursor)
+        # Fetch more markets initially to ensure we have enough after filtering
+        fetch_limit = max_markets * 3  # Fetch 3x more to account for filtering
+        
+        while len(all_markets) < fetch_limit:
+            response = await self.get_markets(next_cursor=next_cursor, limit=100)
             
             # Filter active markets
             active_markets = [m for m in response.data if m.active and not m.closed]
@@ -140,7 +143,19 @@ class PolymarketClient:
             # Small delay to respect rate limits
             await asyncio.sleep(0.1)
             
-        return all_markets[:max_markets]
+        logger.info(f"Fetched {len(all_markets)} active markets before filtering")
+        
+        # Apply advanced filtering
+        from src.utils.market_filters import market_filter
+        filtered_markets = market_filter.filter_markets(all_markets)
+        
+        # Return up to max_markets after filtering
+        final_markets = filtered_markets[:max_markets]
+        
+        logger.info(f"Returning {len(final_markets)} markets after filtering and limiting")
+        logger.info(f"Filter summary: {market_filter.get_filter_summary()}")
+        
+        return final_markets
         
     async def get_market_prices(self, market: Market) -> Optional[MarketPrice]:
         """

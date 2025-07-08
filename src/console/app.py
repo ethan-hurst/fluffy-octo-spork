@@ -5,7 +5,7 @@ Main console application for Polymarket analyzer.
 import asyncio
 import logging
 import sys
-from typing import Optional
+from typing import List, Optional
 
 from src.analyzers.market_analyzer import MarketAnalyzer
 from src.analyzers.models import AnalysisResult
@@ -33,6 +33,7 @@ class PolymarketAnalyzerApp:
         self.market_analyzer = MarketAnalyzer()
         self.news_correlator = NewsCorrelator()
         self.last_analysis: Optional[AnalysisResult] = None
+        self.auto_reload_enabled = False
         self._setup_logging()
         
     def _setup_logging(self) -> None:
@@ -52,7 +53,7 @@ class PolymarketAnalyzerApp:
             self.display.clear_screen()
             self.display.print_banner()
             self.display.print_info("Welcome to Polymarket Analyzer!")
-            self.display.print_info("Type 'help' for available commands or 'analyze' to start.")
+            self.display.print_info("Type 'help' for available commands or 'start' to begin analysis.")
             self.display.print()
             
             # Check API keys
@@ -113,7 +114,7 @@ class PolymarketAnalyzerApp:
         cmd = parts[0]
         args = parts[1:] if len(parts) > 1 else []
         
-        if cmd == "analyze":
+        if cmd == "start":
             await self._run_analysis()
         elif cmd == "top":
             self._show_top_opportunities()
@@ -130,8 +131,28 @@ class PolymarketAnalyzerApp:
             self._export_predictions(args[0])
         elif cmd == "resolve" and len(args) >= 2:
             self._resolve_prediction(args[0], args[1])
+        elif cmd == "open" and args:
+            self._open_market_link(args[0])
         elif cmd == "chat" and args:
             await self._start_market_chat(args[0])
+        elif cmd == "filter":
+            self._show_filter_commands(args)
+        elif cmd == "filters":
+            self._show_current_filters()
+        elif cmd == "closing_soon":
+            self._set_time_filter("closing_soon")
+        elif cmd == "medium_term":
+            self._set_time_filter("medium_term")
+        elif cmd == "long_term":
+            self._set_time_filter("long_term")
+        elif cmd == "all_time":
+            self._set_time_filter(None)
+        elif cmd == "restart":
+            await self._restart_application()
+        elif cmd == "reload":
+            self._reload_modules()
+        elif cmd == "watch":
+            self._toggle_auto_reload()
         elif cmd == "help":
             self.display.print_menu()
         elif cmd == "quit" or cmd == "exit":
@@ -142,7 +163,12 @@ class PolymarketAnalyzerApp:
             
     async def _run_analysis(self) -> None:
         """Run market analysis."""
+        # Show current filters
+        from src.utils.market_filters import market_filter
+        filter_summary = market_filter.get_filter_summary()
+        
         self.display.print_info("Starting market analysis...")
+        self.display.print_info(f"Filters: {filter_summary}")
         
         with self.display.create_progress("Analyzing markets") as progress:
             task = progress.add_task("Fetching data...", total=None)
@@ -218,7 +244,7 @@ class PolymarketAnalyzerApp:
     def _show_top_opportunities(self) -> None:
         """Show top opportunities."""
         if not self.last_analysis:
-            self.display.print_warning("No analysis results available. Run 'analyze' first.")
+            self.display.print_warning("No analysis results available. Run 'start' first.")
             return
             
         if not self.last_analysis.opportunities:
@@ -238,7 +264,7 @@ class PolymarketAnalyzerApp:
             opportunity_id: Opportunity condition ID or rank number
         """
         if not self.last_analysis:
-            self.display.print_warning("No analysis results available. Run 'analyze' first.")
+            self.display.print_warning("No analysis results available. Run 'start' first.")
             return
             
         opportunity = None
@@ -280,7 +306,7 @@ class PolymarketAnalyzerApp:
         metrics = prediction_tracker.calculate_metrics()
         
         if metrics.total_predictions == 0:
-            self.display.print_warning("No predictions tracked yet. Run 'analyze' to start tracking.")
+            self.display.print_warning("No predictions tracked yet. Run 'start' to begin tracking.")
             return
             
         # Create metrics table
@@ -339,12 +365,13 @@ class PolymarketAnalyzerApp:
         
         table = Table(title=f"Recent Predictions ({days} days)")
         table.add_column("Date", style="cyan", width=12)
-        table.add_column("Question", style="white", width=40)
+        table.add_column("Question", style="white", width=35)
         table.add_column("Position", style="green", width=8)
         table.add_column("Confidence", style="yellow", width=10)
         table.add_column("Expected Return", style="blue", width=12)
         table.add_column("Status", style="magenta", width=10)
         table.add_column("Outcome", style="green", width=8)
+        table.add_column("Market Link", style="blue", width=15)
         
         for prediction in sorted(predictions, key=lambda x: x.prediction_date, reverse=True):
             status = "Resolved" if prediction.is_resolved else "Pending"
@@ -358,14 +385,25 @@ class PolymarketAnalyzerApp:
                 else:
                     outcome = "Invalid"
                     
+            # Format market link for display
+            market_link = ""
+            if hasattr(prediction, 'market_url') and prediction.market_url:
+                # Extract just the condition ID for a shorter display
+                condition_id = prediction.condition_id[:8] + "..." if len(prediction.condition_id) > 8 else prediction.condition_id
+                market_link = f"[link={prediction.market_url}]{condition_id}[/link]"
+            else:
+                # Fallback for older predictions without URLs
+                market_link = f"[link=https://polymarket.com/event/{prediction.condition_id}]{prediction.condition_id[:8]}...[/link]"
+            
             table.add_row(
                 prediction.prediction_date.strftime("%Y-%m-%d"),
-                prediction.question[:37] + "..." if len(prediction.question) > 40 else prediction.question,
+                prediction.question[:32] + "..." if len(prediction.question) > 35 else prediction.question,
                 prediction.predicted_position,
                 f"{prediction.confidence_score:.2f}",
                 f"{prediction.expected_return:+.1f}%",
                 status,
-                outcome
+                outcome,
+                market_link
             )
             
         self.display.console.print(table)
@@ -406,6 +444,54 @@ class PolymarketAnalyzerApp:
         else:
             self.display.print_error(f"Prediction not found: {condition_id}")
             
+    def _open_market_link(self, condition_id: str) -> None:
+        """
+        Open market link in browser or display URL.
+        
+        Args:
+            condition_id: Market condition ID
+        """
+        try:
+            # Try to find the prediction with the condition ID
+            predictions = prediction_tracker.load_predictions()
+            
+            # Find by exact condition ID or partial match
+            matching_prediction = None
+            for prediction in predictions:
+                if prediction.condition_id == condition_id or prediction.condition_id.startswith(condition_id):
+                    matching_prediction = prediction
+                    break
+                    
+            if matching_prediction:
+                market_url = matching_prediction.market_url
+                if not market_url:
+                    # Try to generate URL using slug if available
+                    if hasattr(matching_prediction, 'market_slug') and matching_prediction.market_slug:
+                        market_url = f"https://polymarket.com/{matching_prediction.market_slug}"
+                    else:
+                        market_url = f"https://polymarket.com/event/{matching_prediction.condition_id}"
+                        
+                self.display.print_success(f"Market URL: {market_url}")
+                
+                # Try to open in browser
+                try:
+                    import webbrowser
+                    webbrowser.open(market_url)
+                    self.display.print_info("Opening market in your default browser...")
+                except Exception as e:
+                    self.display.print_warning(f"Could not open browser: {e}")
+                    self.display.print_info("You can copy the URL above to open manually")
+            else:
+                # Fallback - warn that we need a slug
+                self.display.print_warning(f"Prediction not found locally for condition ID: {condition_id}")
+                self.display.print_info("Polymarket uses slug-based URLs. To get the correct link:")
+                self.display.print_info("1. Run 'start' to analyze current markets (gets slugs)")
+                self.display.print_info("2. Check predictions again for working links")
+                self.display.print_info(f"Fallback URL (may not work): https://polymarket.com/event/{condition_id}")
+                    
+        except Exception as e:
+            self.display.print_error(f"Error opening market link: {e}")
+            
     async def _start_market_chat(self, opportunity_id: str) -> None:
         """
         Start interactive chat about a specific market.
@@ -414,7 +500,7 @@ class PolymarketAnalyzerApp:
             opportunity_id: Opportunity condition ID or rank number
         """
         if not self.last_analysis:
-            self.display.print_warning("No analysis results available. Run 'analyze' first.")
+            self.display.print_warning("No analysis results available. Run 'start' first.")
             return
             
         # Find the opportunity
@@ -442,6 +528,251 @@ class PolymarketAnalyzerApp:
             
         # Start chat session
         start_market_chat(opportunity)
+        
+    def _show_filter_commands(self, args: List[str]) -> None:
+        """
+        Show filter commands or set filters.
+        
+        Args:
+            args: Filter command arguments
+        """
+        if not args:
+            filter_help = """
+[bold cyan]Market Filter Commands:[/bold cyan]
+
+[bold yellow]Quick Time Filters:[/bold yellow]
+[green]closing_soon[/green]     - Markets closing ≤30 days
+[green]medium_term[/green]      - Markets closing 30-90 days  
+[green]long_term[/green]        - Markets closing >90 days
+[green]all_time[/green]         - Remove time filter
+
+[bold yellow]Advanced Filters:[/bold yellow]
+[green]filter categories politics,crypto[/green]    - Filter by categories
+[green]filter keywords trump,bitcoin[/green]        - Filter by keywords
+[green]filter max_days 30[/green]                   - Max days to resolution
+[green]filter min_days 7[/green]                    - Min days to resolution
+[green]filter clear[/green]                         - Clear all filters
+
+[bold yellow]View Current Filters:[/bold yellow]
+[green]filters[/green]          - Show active filters
+
+[dim]Examples:[/dim]
+[dim]  closing_soon                    # Quick filter for urgent markets[/dim]
+[dim]  filter categories politics      # Only political markets[/dim]  
+[dim]  filter keywords trump,election  # Only Trump or election markets[/dim]
+"""
+            self.display.console.print(filter_help)
+            return
+            
+        # Handle filter commands
+        if len(args) >= 2:
+            filter_type = args[0]
+            filter_value = args[1]
+            
+            if filter_type == "categories":
+                self._set_category_filter(filter_value)
+            elif filter_type == "keywords":
+                self._set_keyword_filter(filter_value)
+            elif filter_type == "max_days":
+                try:
+                    days = int(filter_value)
+                    self._set_max_days_filter(days)
+                except ValueError:
+                    self.display.print_error("Invalid number for max_days")
+            elif filter_type == "min_days":
+                try:
+                    days = int(filter_value)
+                    self._set_min_days_filter(days)
+                except ValueError:
+                    self.display.print_error("Invalid number for min_days")
+            else:
+                self.display.print_error(f"Unknown filter type: {filter_type}")
+        elif len(args) == 1 and args[0] == "clear":
+            self._clear_all_filters()
+        else:
+            self.display.print_error("Invalid filter command. Use 'filter' for help.")
+            
+    def _show_current_filters(self) -> None:
+        """Show current active filters."""
+        from src.utils.market_filters import market_filter
+        
+        summary = market_filter.get_filter_summary()
+        self.display.print_info(f"Current filters: {summary}")
+        
+    def _set_time_filter(self, time_horizon: Optional[str]) -> None:
+        """
+        Set time horizon filter.
+        
+        Args:
+            time_horizon: Time horizon filter
+        """
+        from src.utils.market_filters import market_filter
+        
+        market_filter.time_horizon_filter = time_horizon
+        
+        if time_horizon:
+            self.display.print_success(f"Time filter set to: {time_horizon}")
+        else:
+            self.display.print_success("Time filter cleared")
+            
+        self.display.print_info("Run 'start' to apply new filters")
+        
+    def _set_category_filter(self, categories: str) -> None:
+        """
+        Set category filter.
+        
+        Args:
+            categories: Comma-separated categories
+        """
+        from src.utils.market_filters import market_filter
+        
+        market_filter.categories = market_filter._parse_comma_separated(categories)
+        self.display.print_success(f"Category filter set to: {categories}")
+        self.display.print_info("Run 'start' to apply new filters")
+        
+    def _set_keyword_filter(self, keywords: str) -> None:
+        """
+        Set keyword filter.
+        
+        Args:
+            keywords: Comma-separated keywords
+        """
+        from src.utils.market_filters import market_filter
+        
+        market_filter.keywords = market_filter._parse_comma_separated(keywords)
+        self.display.print_success(f"Keyword filter set to: {keywords}")
+        self.display.print_info("Run 'start' to apply new filters")
+        
+    def _set_max_days_filter(self, days: int) -> None:
+        """
+        Set maximum days filter.
+        
+        Args:
+            days: Maximum days to resolution
+        """
+        from src.utils.market_filters import market_filter
+        
+        market_filter.max_days_to_resolution = days
+        self.display.print_success(f"Maximum days filter set to: {days}")
+        self.display.print_info("Run 'start' to apply new filters")
+        
+    def _set_min_days_filter(self, days: int) -> None:
+        """
+        Set minimum days filter.
+        
+        Args:
+            days: Minimum days to resolution
+        """
+        from src.utils.market_filters import market_filter
+        
+        market_filter.min_days_to_resolution = days
+        self.display.print_success(f"Minimum days filter set to: {days}")
+        self.display.print_info("Run 'start' to apply new filters")
+        
+    def _clear_all_filters(self) -> None:
+        """Clear all active filters."""
+        from src.utils.market_filters import market_filter
+        
+        market_filter.categories = []
+        market_filter.keywords = []
+        market_filter.time_horizon_filter = None
+        market_filter.max_days_to_resolution = None
+        market_filter.min_days_to_resolution = None
+        
+        self.display.print_success("All filters cleared")
+        self.display.print_info("Run 'start' to analyze all markets")
+        
+    async def _restart_application(self) -> None:
+        """Restart the application gracefully."""
+        self.display.print_info("Restarting application...")
+        
+        # Clear caches
+        try:
+            await api_cache.cleanup()
+            self.display.print_success("Cache cleared")
+        except Exception as e:
+            self.display.print_warning(f"Cache cleanup failed: {e}")
+        
+        # Reload modules
+        self._reload_modules()
+        
+        # Reset application state
+        self.last_analysis = None
+        
+        # Clear screen and show banner
+        self.display.clear_screen()
+        self.display.print_banner()
+        self.display.print_success("Application restarted successfully!")
+        self.display.print_info("All modules reloaded, cache cleared, filters reset")
+        self.display.print_info("Type 'help' for available commands or 'start' to begin analysis.")
+        self.display.print()
+        
+    def _reload_modules(self) -> None:
+        """Reload all application modules to pick up code changes."""
+        import importlib
+        import sys
+        
+        modules_to_reload = [
+            'src.analyzers.market_analyzer',
+            'src.analyzers.models', 
+            'src.analyzers.news_correlator',
+            'src.clients.news.client',
+            'src.clients.news.models',
+            'src.clients.polymarket.client',
+            'src.clients.polymarket.models',
+            'src.config.settings',
+            'src.console.display',
+            'src.console.chat',
+            'src.utils.cache',
+            'src.utils.rate_limiter',
+            'src.utils.prediction_tracker',
+            'src.utils.market_filters'
+        ]
+        
+        reloaded_count = 0
+        for module_name in modules_to_reload:
+            try:
+                if module_name in sys.modules:
+                    importlib.reload(sys.modules[module_name])
+                    reloaded_count += 1
+            except Exception as e:
+                self.display.print_warning(f"Failed to reload {module_name}: {e}")
+                
+        # Reinitialize components with reloaded modules
+        try:
+            self.market_analyzer = MarketAnalyzer()
+            self.news_correlator = NewsCorrelator()
+            
+            # Reset global instances  
+            import src.utils.market_filters
+            importlib.reload(src.utils.market_filters)
+            
+            self.display.print_success(f"Reloaded {reloaded_count} modules")
+            
+        except Exception as e:
+            self.display.print_error(f"Error reinitializing components: {e}")
+            self.display.print_warning("Some features may not work correctly until full restart")
+            
+    def _toggle_auto_reload(self) -> None:
+        """Toggle auto-reload functionality."""
+        try:
+            from src.utils.auto_reload import enable_auto_reload, disable_auto_reload
+            
+            if self.auto_reload_enabled:
+                disable_auto_reload()
+                self.auto_reload_enabled = False
+                self.display.print_success("Auto-reload disabled")
+                self.display.print_info("Changes to code will no longer trigger automatic reloads")
+            else:
+                enable_auto_reload(self)
+                self.auto_reload_enabled = True
+                self.display.print_success("Auto-reload enabled")
+                self.display.print_info("Code changes will now automatically reload modules")
+                self.display.print_warning("This is a development feature - disable for production")
+                
+        except Exception as e:
+            self.display.print_error(f"Failed to toggle auto-reload: {e}")
+            self.display.print_info("Auto-reload feature may not be available")
 
 
 async def main() -> None:

@@ -37,6 +37,7 @@ class Market(BaseModel):
     question_id: Optional[str] = Field(None, description="Question ID")
     question: str = Field(..., description="Market question")
     description: Optional[str] = Field(None, description="Market description")
+    market_slug: Optional[str] = Field(None, description="Market URL slug")
     tokens: List[Token] = Field(..., description="Binary token pair")
     rewards: Optional[Rewards] = Field(None, description="Rewards information")
     minimum_order_size: float = Field(..., description="Minimum order size")

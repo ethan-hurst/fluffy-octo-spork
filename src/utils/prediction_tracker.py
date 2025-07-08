@@ -32,6 +32,7 @@ class PredictionRecord(BaseModel):
     overall_score: float
     risk_level: str
     reasoning: str
+    market_url: Optional[str] = None
     
     # Tracking info
     prediction_date: datetime
@@ -131,6 +132,7 @@ class PredictionTracker:
             overall_score=opportunity.score.overall_score,
             risk_level=opportunity.risk_level,
             reasoning=opportunity.reasoning,
+            market_url=self._generate_market_url(opportunity.condition_id, opportunity.market_slug),
             prediction_date=datetime.now(),
             market_end_date=opportunity.end_date
         )
@@ -140,6 +142,24 @@ class PredictionTracker:
             f.write(record.model_dump_json() + "\n")
             
         logger.info(f"Logged prediction for {opportunity.condition_id}: {opportunity.recommended_position}")
+        
+    def _generate_market_url(self, condition_id: str, market_slug: Optional[str] = None) -> str:
+        """
+        Generate Polymarket URL using market slug or condition ID fallback.
+        
+        Args:
+            condition_id: Market condition ID
+            market_slug: Market URL slug (preferred)
+            
+        Returns:
+            str: Full Polymarket URL
+        """
+        if market_slug:
+            # Use the slug-based URL (correct format)
+            return f"https://polymarket.com/{market_slug}"
+        else:
+            # Fallback to condition ID (may not work, but better than nothing)
+            return f"https://polymarket.com/event/{condition_id}"
         
     def update_outcome(
         self, 
@@ -372,8 +392,8 @@ class PredictionTracker:
         fieldnames = [
             "condition_id", "question", "predicted_position", "predicted_probability",
             "current_market_price", "fair_value_price", "expected_return",
-            "confidence_score", "overall_score", "risk_level", "prediction_date",
-            "market_end_date", "actual_outcome", "resolution_date",
+            "confidence_score", "overall_score", "risk_level", "market_url",
+            "prediction_date", "market_end_date", "actual_outcome", "resolution_date",
             "final_market_price", "actual_return", "prediction_correct"
         ]
         

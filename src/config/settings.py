@@ -69,6 +69,32 @@ class Settings(BaseSettings):
         description="Maximum number of markets to analyze"
     )
     
+    # Market Selection Filters
+    market_categories: Optional[str] = Field(
+        default=None,
+        description="Comma-separated list of categories to include (e.g., 'politics,crypto,sports')"
+    )
+    market_keywords: Optional[str] = Field(
+        default=None,
+        description="Comma-separated list of keywords to search for (e.g., 'trump,bitcoin,election')"
+    )
+    sort_by_volume: bool = Field(
+        default=True,
+        description="Sort markets by volume (highest first)"
+    )
+    time_horizon_filter: Optional[str] = Field(
+        default=None,
+        description="Time horizon filter: 'closing_soon' (≤30 days), 'medium_term' (30-90 days), 'long_term' (>90 days)"
+    )
+    max_days_to_resolution: Optional[int] = Field(
+        default=None,
+        description="Maximum days until market resolution (None for no limit)"
+    )
+    min_days_to_resolution: Optional[int] = Field(
+        default=None,
+        description="Minimum days until market resolution (None for no limit)"
+    )
+    
     class Config:
         env_file = ".env"
         env_file_encoding = "utf-8"
