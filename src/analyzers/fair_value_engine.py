@@ -57,12 +57,16 @@ class FairValueEngine:
         """
         # Step 1: Get intelligent base probability
         base_prob, base_reasoning = self._get_base_probability(market)
+        is_constitutional = self._is_constitutional_amendment(market)
         
         # Step 2: Apply sophisticated news sentiment adjustment
         news_adjustment, news_reasoning = await self._calculate_llm_news_adjustment(news_articles, market)
         
-        # Step 3: Apply temporal factors
-        time_adjustment, time_reasoning = self._calculate_time_adjustment(market)
+        # Step 3: Apply temporal factors (skip for constitutional amendments - already factored in)
+        if is_constitutional:
+            time_adjustment, time_reasoning = 0.0, "Constitutional amendment timeline already factored into base probability"
+        else:
+            time_adjustment, time_reasoning = self._calculate_time_adjustment(market)
         
         # Step 4: Apply market-specific factors
         market_adjustment, market_reasoning = self._calculate_market_adjustment(market)
