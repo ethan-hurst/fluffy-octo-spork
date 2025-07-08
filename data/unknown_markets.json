@@ -1,0 +1,10 @@
+[
+  {
+    "condition_id": "test2",
+    "question": "Will aliens land on Earth in 2024?",
+    "description": "This market will resolve to Yes if extraterrestrial beings make confirmed contact with Earth",
+    "category": null,
+    "timestamp": "2025-07-08T01:44:26.622571",
+    "end_date": "2026-07-08T01:44:26.621582"
+  }
+]

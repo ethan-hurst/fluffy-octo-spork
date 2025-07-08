@@ -346,7 +346,7 @@ class FairValueEngine:
             
         # Player Retirement
         if "retire" in question:
-            if any(age_indicator in question for age in ["old", "veteran", "aging"]):
+            if any(age_indicator in question for age_indicator in ["old", "veteran", "aging"]):
                 return 0.40, "Veteran player retirements occur ~40% rate"
             else:
                 return 0.15, "Early retirement rate: ~15%"

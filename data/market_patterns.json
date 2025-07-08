@@ -1,0 +1,91 @@
+{
+  "constitutional_amendment": {
+    "category": "constitutional_amendment",
+    "keywords": [
+      "constitutional amendment",
+      "22nd amendment",
+      "term limits",
+      "repeal",
+      "supreme court"
+    ],
+    "exclusions": [],
+    "probability_baseline": 0.01,
+    "confidence": 0.8,
+    "examples": [
+      "Will Trump repeal Presidential term limits?"
+    ],
+    "last_updated": "2025-07-08T01:44:26.621799",
+    "usage_count": 0
+  },
+  "presidential_election": {
+    "category": "presidential_election",
+    "keywords": [
+      "president",
+      "election",
+      "win presidency"
+    ],
+    "exclusions": [
+      "term limits",
+      "amendment"
+    ],
+    "probability_baseline": 0.45,
+    "confidence": 0.8,
+    "examples": [
+      "Will Trump win the 2024 election?"
+    ],
+    "last_updated": "2025-07-08T01:44:26.621807",
+    "usage_count": 0
+  },
+  "crypto_etf": {
+    "category": "crypto_etf",
+    "keywords": [
+      "etf",
+      "approved",
+      "bitcoin",
+      "ethereum",
+      "crypto"
+    ],
+    "exclusions": [],
+    "probability_baseline": 0.4,
+    "confidence": 0.8,
+    "examples": [
+      "Will a Bitcoin ETF be approved?"
+    ],
+    "last_updated": "2025-07-08T01:44:26.621811",
+    "usage_count": 0
+  },
+  "geopolitical_conflict": {
+    "category": "geopolitical_conflict",
+    "keywords": [
+      "war",
+      "military action",
+      "troops",
+      "invasion"
+    ],
+    "exclusions": [],
+    "probability_baseline": 0.2,
+    "confidence": 0.8,
+    "examples": [
+      "Will there be military conflict in Taiwan?"
+    ],
+    "last_updated": "2025-07-08T01:44:26.621814",
+    "usage_count": 0
+  },
+  "economic_recession": {
+    "category": "economic_recession",
+    "keywords": [
+      "recession",
+      "economic downturn",
+      "gdp decline",
+      "unemployment"
+    ],
+    "exclusions": [],
+    "probability_baseline": 0.25,
+    "confidence": 0.8,
+    "examples": [
+      "Will the US enter recession in 2024?"
+    ],
+    "last_updated": "2025-07-08T01:44:26.621817",
+    "usage_count": 0
+  }
+}
