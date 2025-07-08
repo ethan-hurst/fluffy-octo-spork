@@ -19,6 +19,7 @@ from src.analyzers.crypto_model import CryptoFinancialModel
 from src.analyzers.sports_model import SportsMarketModel
 from src.analyzers.entertainment_model import EntertainmentMarketModel
 from src.analyzers.weather_model import WeatherClimateModel
+from src.analyzers.technology_model import TechnologyMarketModel
 
 logger = logging.getLogger(__name__)
 
@@ -51,6 +52,7 @@ class FairValueEngine:
         self.sports_model = SportsMarketModel()
         self.entertainment_model = EntertainmentMarketModel()
         self.weather_model = WeatherClimateModel()
+        self.technology_model = TechnologyMarketModel()
         
     async def calculate_fair_value(
         self, 
@@ -111,6 +113,15 @@ class FairValueEngine:
                 return distribution.mean, 1.0 - distribution.mean, reasoning
             except Exception as e:
                 logger.warning(f"Weather model failed, falling back to standard approach: {e}")
+        
+        # Check if this is a technology market that can use advanced modeling
+        if self._is_technology_event(market):
+            try:
+                distribution = self.technology_model.calculate_technology_probability(market, news_articles)
+                reasoning = self._generate_bayesian_reasoning(distribution, "Advanced technology model with industry tracking")
+                return distribution.mean, 1.0 - distribution.mean, reasoning
+            except Exception as e:
+                logger.warning(f"Technology model failed, falling back to standard approach: {e}")
         
         # Use standard approach with Bayesian updating for other markets
         return await self._calculate_standard_fair_value(market, news_articles)
@@ -195,6 +206,8 @@ class FairValueEngine:
             return "entertainment"
         elif self._is_weather_climate_event(market):
             return "weather"
+        elif self._is_technology_event(market):
+            return "technology"
         else:
             return "general"
             
@@ -247,6 +260,10 @@ class FairValueEngine:
         # Weather/Climate Events
         if self._is_weather_climate_event(market):
             return self._calculate_weather_climate_probability(market)
+            
+        # Technology Events
+        if self._is_technology_event(market):
+            return self._calculate_technology_probability(market)
             
         # Corporate/Business Events
         if self._is_corporate_event(market):

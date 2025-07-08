@@ -18,7 +18,9 @@
       "Bash(python3 -m pytest:*)",
       "WebFetch(domain:docs.anthropic.com)",
       "Bash(rm:*)",
-      "Bash(pip install:*)"
+      "Bash(pip install:*)",
+      "Bash(rg:*)",
+      "Bash(./venv_linux/bin/python -m pytest tests/test_bayesian_updater.py -v)"
     ],
     "deny": []
   }
