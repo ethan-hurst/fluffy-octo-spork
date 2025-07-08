@@ -1,10 +1,42 @@
 [
   {
-    "condition_id": "test2",
+    "condition_id": "test0",
     "question": "Will aliens land on Earth in 2024?",
-    "description": "This market will resolve to Yes if extraterrestrial beings make confirmed contact with Earth",
+    "description": "Market about will aliens land on earth in 2024?",
     "category": null,
-    "timestamp": "2025-07-08T01:44:26.622571",
-    "end_date": "2026-07-08T01:44:26.621582"
+    "timestamp": "2025-07-08T01:44:50.678046",
+    "end_date": "2026-07-08T01:44:50.677991"
+  },
+  {
+    "condition_id": "test1",
+    "question": "Will extraterrestrial life be confirmed in 2025?",
+    "description": "Market about will extraterrestrial life be confirmed in 2025?",
+    "category": null,
+    "timestamp": "2025-07-08T01:44:50.678397",
+    "end_date": "2026-07-08T01:44:50.678311"
+  },
+  {
+    "condition_id": "test2",
+    "question": "Will UFOs be officially acknowledged by governments?",
+    "description": "Market about will ufos be officially acknowledged by governments?",
+    "category": null,
+    "timestamp": "2025-07-08T01:44:50.678698",
+    "end_date": "2026-07-08T01:44:50.678640"
+  },
+  {
+    "condition_id": "test3",
+    "question": "Will alien contact happen this decade?",
+    "description": "Market about will alien contact happen this decade?",
+    "category": null,
+    "timestamp": "2025-07-08T01:44:50.678998",
+    "end_date": "2026-07-08T01:44:50.678942"
+  },
+  {
+    "condition_id": "test4",
+    "question": "Will SETI find alien signals this year?",
+    "description": "Market about will seti find alien signals this year?",
+    "category": null,
+    "timestamp": "2025-07-08T01:44:50.679310",
+    "end_date": "2026-07-08T01:44:50.679255"
   }
 ]
