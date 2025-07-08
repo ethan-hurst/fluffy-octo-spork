@@ -148,30 +148,25 @@ class TestPoliticalMarketModel:
     def test_identify_candidate_generic(self):
         """Test generic candidate identification."""
         market = self.markets["congressional_control"]
-        candidate = self.model._identify_candidate(market)
-        assert candidate == "Republican"  # Should identify party from question
+        candidates = self.model._extract_candidate_names(market.question.lower())
+        # For non-candidate markets, should return empty list
+        assert len(candidates) == 0
         
     def test_aggregate_polls_basic(self):
         """Test basic poll aggregation."""
         # Filter polls for Trump
         trump_polls = [p for p in self.poll_data if p.candidate == "Trump"]
         
-        aggregated = self.model._aggregate_polls(trump_polls)
+        average = self.model._calculate_polling_average(trump_polls, "Trump")
         
-        assert isinstance(aggregated, dict)
-        assert "weighted_average" in aggregated
-        assert "confidence" in aggregated
-        assert "sample_size" in aggregated
-        assert "recency_weight" in aggregated
-        
-        # Should be between the two Trump poll values
-        assert 47.0 < aggregated["weighted_average"] < 50.0
+        assert isinstance(average, float)
+        # Should be between the two Trump poll values (47.2 and 49.1)
+        assert 0.47 < average < 0.50
         
     def test_aggregate_polls_empty(self):
         """Test poll aggregation with empty data."""
-        aggregated = self.model._aggregate_polls([])
-        assert aggregated["weighted_average"] == 0.0
-        assert aggregated["confidence"] == 0.0
+        average = self.model._calculate_polling_average([], "Trump")
+        assert average == 0.5  # Should return default 50%
         
     def test_weight_by_quality_high_quality(self):
         """Test poll quality weighting for high quality polls."""

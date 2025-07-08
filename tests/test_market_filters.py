@@ -205,6 +205,9 @@ class TestMarketFilter:
         self.filter.categories = []
         self.filter.keywords = []
         self.filter.time_horizon_filter = None
+        self.filter.sort_by_volume = False
+        self.filter.max_days_to_resolution = None
+        self.filter.min_days_to_resolution = None
         summary = self.filter.get_filter_summary()
         assert "No filters active" in summary
         

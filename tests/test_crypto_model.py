@@ -461,19 +461,19 @@ class TestCryptoFinancialModel:
         
     def test_get_market_data_placeholder(self):
         """Test market data retrieval (placeholder implementation)."""
-        data = self.model._get_market_data("Bitcoin")
+        data = self.model._get_crypto_market_data("Bitcoin")
         # Should return None in current implementation
         assert data is None
         
     def test_get_technical_indicators_placeholder(self):
         """Test technical indicators retrieval (placeholder implementation)."""
-        indicators = self.model._get_technical_indicators("Bitcoin")
+        indicators = self.model._get_financial_indicators()
         # Should return None in current implementation
         assert indicators is None
         
     def test_get_regulatory_sentiment_placeholder(self):
         """Test regulatory sentiment retrieval (placeholder implementation)."""
-        sentiment = self.model._get_regulatory_sentiment()
+        sentiment = self.model._assess_regulatory_climate([])
         # Should return None in current implementation
         assert sentiment is None
         
@@ -504,36 +504,32 @@ class TestCryptoFinancialModel:
             volume_24h=1000000.0,
             price_change_7d=5.0,
             price_change_30d=10.0,
-            rsi=50.0,
-            ma_50=950.0,
-            ma_200=800.0,
-            support_level=900.0,
-            resistance_level=1100.0
+            volatility_30d=0.45,
+            all_time_high=1200.0,
+            distance_from_ath=0.167
         )
         
         assert data.symbol == "TEST"
         assert data.current_price == 1000.0
         assert data.market_cap == 10000000.0
         assert data.volume_24h == 1000000.0
-        assert data.rsi == 50.0
+        assert data.volatility_30d == 0.45
         
     def test_technical_indicators_creation(self):
         """Test FinancialIndicators dataclass creation."""
         indicators = FinancialIndicators(
-            rsi=50.0,
-            macd_signal="neutral",
-            bollinger_position="middle",
-            volume_trend="stable",
-            momentum_score=0.5,
-            trend_strength=0.6,
-            volatility_index=0.4
+            vix_level=20.0,
+            spy_trend="neutral",
+            dxy_trend="neutral",
+            bond_yield_10y=4.0,
+            risk_sentiment="neutral"
         )
         
-        assert indicators.rsi == 50.0
-        assert indicators.macd_signal == "neutral"
-        assert indicators.bollinger_position == "middle"
-        assert indicators.volume_trend == "stable"
-        assert indicators.momentum_score == 0.5
+        assert indicators.vix_level == 20.0
+        assert indicators.spy_trend == "neutral"
+        assert indicators.dxy_trend == "neutral"
+        assert indicators.bond_yield_10y == 4.0
+        assert indicators.risk_sentiment == "neutral"
         
     def test_regulatory_sentiment_creation(self):
         """Test dict dataclass creation."""
@@ -546,11 +542,11 @@ class TestCryptoFinancialModel:
             compliance_trend="stable"
         )
         
-        assert sentiment.sec_stance == "neutral"
-        assert sentiment.cftc_stance == "positive"
-        assert sentiment.fed_stance == "negative"
-        assert sentiment.recent_statements_sentiment == 0.0
-        assert sentiment.regulatory_clarity_score == 0.5
+        assert sentiment["sec_stance"] == "neutral"
+        assert sentiment["cftc_stance"] == "positive"
+        assert sentiment["fed_stance"] == "negative"
+        assert sentiment["recent_statements_sentiment"] == 0.0
+        assert sentiment["regulatory_clarity_score"] == 0.5
 
 
 if __name__ == "__main__":

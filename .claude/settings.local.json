@@ -29,7 +29,12 @@
       "Bash(./venv_linux/bin/python -m pytest tests/test_sports_model.py tests/test_political_model.py -v --tb=short)",
       "Bash(./venv_linux/bin/python -m pytest tests/test_bayesian_updater.py tests/test_sports_model.py tests/test_political_model.py tests/test_crypto_model.py tests/test_market_filters.py -v --tb=short)",
       "Bash(./venv_linux/bin/python -m pytest tests/test_crypto_model.py::TestCryptoFinancialModel::test_identify_crypto_asset_bitcoin -v)",
-      "Bash(./venv_linux/bin/python -m pytest tests/test_bayesian_updater.py tests/test_sports_model.py tests/test_political_model.py tests/test_crypto_model.py tests/test_market_filters.py -v --tb=no)"
+      "Bash(./venv_linux/bin/python -m pytest tests/test_bayesian_updater.py tests/test_sports_model.py tests/test_political_model.py tests/test_crypto_model.py tests/test_market_filters.py -v --tb=no)",
+      "Bash(./venv_linux/bin/python -m pytest tests/test_crypto_model.py::TestCryptoFinancialModel::test_crypto_market_data_creation -v)",
+      "Bash(./venv_linux/bin/python -m pytest tests/test_market_filters.py::TestMarketFilter::test_filter_summary -v)",
+      "Bash(./venv_linux/bin/python -m pytest tests/test_political_model.py::TestPoliticalMarketModel::test_identify_candidate_trump -v)",
+      "Bash(./venv_linux/bin/python -m pytest tests/test_bayesian_updater.py tests/test_market_filters.py tests/test_crypto_model.py -v --tb=no)",
+      "Bash(./venv_linux/bin/python -m pytest tests/test_crypto_model.py::TestCryptoFinancialModel::test_get_market_data_placeholder -v)"
     ],
     "deny": []
   }
