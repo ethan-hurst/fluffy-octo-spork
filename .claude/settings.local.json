@@ -20,7 +20,10 @@
       "Bash(rm:*)",
       "Bash(pip install:*)",
       "Bash(rg:*)",
-      "Bash(./venv_linux/bin/python -m pytest tests/test_bayesian_updater.py -v)"
+      "Bash(./venv_linux/bin/python -m pytest tests/test_bayesian_updater.py -v)",
+      "Bash(./venv_linux/bin/python -m pytest tests/ -v --tb=short)",
+      "Bash(./venv_linux/bin/python -m pytest tests/test_bayesian_updater.py tests/test_sports_model.py tests/test_political_model.py tests/test_market_* -v --tb=short)",
+      "Bash(./venv_linux/bin/python -m pytest tests/test_sports_model.py::TestSportsMarketModel::test_identify_sport_nfl -v)"
     ],
     "deny": []
   }
