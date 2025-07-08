@@ -5,7 +5,7 @@ Advanced political market modeling with polling data integration.
 import re
 import logging
 import statistics
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Dict, List, Optional, Tuple
 from dataclasses import dataclass
 
@@ -207,15 +207,15 @@ class PoliticalMarketModel:
         
         if "trump" in candidates:
             return [
-                PollData("trump", 48.5, datetime.now() - timedelta(days=1), 1200, "CNN", margin_of_error=3.0),
-                PollData("trump", 47.2, datetime.now() - timedelta(days=3), 800, "FOX", margin_of_error=3.5),
-                PollData("trump", 49.1, datetime.now() - timedelta(days=5), 1000, "ABC", margin_of_error=3.2),
+                PollData("trump", 48.5, datetime.now(timezone.utc) - timedelta(days=1), 1200, "CNN", margin_of_error=3.0),
+                PollData("trump", 47.2, datetime.now(timezone.utc) - timedelta(days=3), 800, "FOX", margin_of_error=3.5),
+                PollData("trump", 49.1, datetime.now(timezone.utc) - timedelta(days=5), 1000, "ABC", margin_of_error=3.2),
             ]
         elif "biden" in candidates:
             return [
-                PollData("biden", 51.2, datetime.now() - timedelta(days=1), 1200, "CNN", margin_of_error=3.0),
-                PollData("biden", 50.8, datetime.now() - timedelta(days=3), 800, "FOX", margin_of_error=3.5),
-                PollData("biden", 52.1, datetime.now() - timedelta(days=5), 1000, "ABC", margin_of_error=3.2),
+                PollData("biden", 51.2, datetime.now(timezone.utc) - timedelta(days=1), 1200, "CNN", margin_of_error=3.0),
+                PollData("biden", 50.8, datetime.now(timezone.utc) - timedelta(days=3), 800, "FOX", margin_of_error=3.5),
+                PollData("biden", 52.1, datetime.now(timezone.utc) - timedelta(days=5), 1000, "ABC", margin_of_error=3.2),
             ]
             
         return []
@@ -231,7 +231,7 @@ class PoliticalMarketModel:
         
         for poll in polls:
             # Recency weight (more recent polls get higher weight)
-            days_old = (datetime.now() - poll.poll_date).days
+            days_old = (datetime.now(timezone.utc) - poll.poll_date).days
             recency_weight = max(0.1, 1.0 - (days_old / 30.0))  # Decay over 30 days
             
             # Sample size weight

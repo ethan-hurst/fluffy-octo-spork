@@ -5,7 +5,7 @@ Advanced crypto/financial market modeling with real-time data integration.
 import re
 import logging
 import statistics
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Dict, List, Optional, Tuple, Union
 from dataclasses import dataclass
 from enum import Enum
@@ -297,7 +297,7 @@ class CryptoFinancialModel:
                 asset_name="Bitcoin",
                 applicant="Multiple (BlackRock, Fidelity, etc.)",
                 filing_date=datetime(2023, 6, 15),
-                expected_decision_date=datetime.now() + timedelta(days=45),
+                expected_decision_date=datetime.now(timezone.utc) + timedelta(days=45),
                 stage=ETFApprovalStage.FINAL_REVIEW,
                 public_comments_count=15000,
                 sec_staff_feedback="neutral"
@@ -306,7 +306,7 @@ class CryptoFinancialModel:
                 asset_name="Ethereum",
                 applicant="VanEck, ARK, others",
                 filing_date=datetime(2023, 9, 1),
-                expected_decision_date=datetime.now() + timedelta(days=120),
+                expected_decision_date=datetime.now(timezone.utc) + timedelta(days=120),
                 stage=ETFApprovalStage.UNDER_REVIEW,
                 public_comments_count=8000,
                 sec_staff_feedback="neutral"
@@ -392,10 +392,10 @@ class CryptoFinancialModel:
         if '2024' in full_text:
             # Calculate days until end of 2024
             end_2024 = datetime(2024, 12, 31)
-            timeframe_days = max(1, (end_2024 - datetime.now()).days)
+            timeframe_days = max(1, (end_2024 - datetime.now(timezone.utc)).days)
         elif '2025' in full_text:
             end_2025 = datetime(2025, 12, 31)
-            timeframe_days = max(1, (end_2025 - datetime.now()).days)
+            timeframe_days = max(1, (end_2025 - datetime.now(timezone.utc)).days)
             
         return (asset, target_price, timeframe_days)
         

@@ -6,7 +6,7 @@ import re
 import logging
 import statistics
 import math
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Dict, List, Optional, Tuple, Set
 from dataclasses import dataclass
 from enum import Enum
@@ -804,7 +804,7 @@ class TechnologyMarketModel:
             
         # Adjust for timeline
         if launch_data.target_date and launch_data.announced_date:
-            days_to_target = (launch_data.target_date - datetime.now()).days
+            days_to_target = (launch_data.target_date - datetime.now(timezone.utc)).days
             if days_to_target < 30:
                 base_prob *= 1.2  # Close to target
             elif days_to_target > 180:

@@ -3,7 +3,7 @@ Market filtering utilities for advanced market selection.
 """
 
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import List, Optional
 
 from src.clients.polymarket.models import Market
@@ -124,7 +124,7 @@ class MarketFilter:
             List[Market]: Filtered markets
         """
         filtered = []
-        now = datetime.now()
+        now = datetime.now(timezone.utc)
         
         for market in markets:
             if not market.end_date_iso:
