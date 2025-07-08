@@ -244,9 +244,11 @@ class DisplayManager:
             str: Colored risk level
         """
         colors = {
+            "MINIMAL": "[bright_green]MINIMAL[/bright_green]",
             "LOW": "[green]LOW[/green]",
             "MEDIUM": "[yellow]MEDIUM[/yellow]",
-            "HIGH": "[red]HIGH[/red]"
+            "HIGH": "[red]HIGH[/red]",
+            "EXTREME": "[bold red]EXTREME[/bold red]"
         }
         return colors.get(risk_level, risk_level)
         

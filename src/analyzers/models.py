@@ -96,17 +96,34 @@ class MarketOpportunity(BaseModel):
     @property
     def risk_level(self) -> str:
         """
-        Categorize risk level based on scores.
+        Categorize risk level based on actual probability of loss and loss magnitude.
         
         Returns:
-            str: Risk level (LOW/MEDIUM/HIGH)
+            str: Risk level (LOW/MEDIUM/HIGH/EXTREME)
         """
-        if self.score.confidence_score >= 0.8 and self.score.volume_score >= 0.7:
-            return "LOW"
-        elif self.score.confidence_score >= 0.6 and self.score.volume_score >= 0.5:
-            return "MEDIUM"
+        # Calculate probability of total loss
+        if self.recommended_position == "YES":
+            prob_loss = 1.0 - self.fair_yes_price  # Probability YES loses (goes to 0)
+            current_price = self.current_yes_price
         else:
+            prob_loss = 1.0 - self.fair_no_price   # Probability NO loses (goes to 0)
+            current_price = self.current_no_price
+            
+        # Factor in confidence - lower confidence increases effective risk
+        confidence_multiplier = 1.0 / max(self.score.confidence_score, 0.1)
+        adjusted_prob_loss = min(0.99, prob_loss * confidence_multiplier)
+        
+        # Risk assessment based on probability of total loss
+        if adjusted_prob_loss >= 0.9:  # 90%+ chance of total loss
+            return "EXTREME"
+        elif adjusted_prob_loss >= 0.7:  # 70%+ chance of total loss
             return "HIGH"
+        elif adjusted_prob_loss >= 0.5:  # 50%+ chance of total loss
+            return "MEDIUM"
+        elif adjusted_prob_loss >= 0.3:  # 30%+ chance of total loss
+            return "LOW"
+        else:  # <30% chance of total loss
+            return "MINIMAL"
 
 
 class AnalysisResult(BaseModel):

@@ -33,6 +33,33 @@ class SanityChecker:
         self.extreme_probability_threshold = 0.05  # 5% or 95%
         self.merger_base_rate = 0.02  # 2% base rate for mergers
         
+        # Industry-specific merger knowledge
+        self.industry_merger_rates = {
+            "tech": 0.15,      # Tech has higher merger activity
+            "pharma": 0.12,    # Pharma consolidation common
+            "finance": 0.08,   # Banking heavily regulated
+            "energy": 0.06,    # Oil/gas sector consolidation
+            "media": 0.10,     # Media consolidation trends
+            "telecom": 0.05,   # Heavily regulated
+            "defense": 0.03,   # National security concerns
+            "social_media": 0.02  # Antitrust scrutiny
+        }
+        
+        # Regulatory complexity by industry
+        self.regulatory_hurdles = {
+            "finance": ["CFTC", "SEC", "Fed", "FDIC"],
+            "defense": ["CFIUS", "DoD", "export controls"],
+            "telecom": ["FCC", "antitrust", "national security"],
+            "media": ["FCC", "antitrust", "content ownership"],
+            "social_media": ["FTC", "antitrust", "data privacy"]
+        }
+        
+        # Companies with known antitrust scrutiny
+        self.antitrust_targets = {
+            "google", "apple", "amazon", "microsoft", "meta", "facebook",
+            "x", "twitter", "tesla", "nvidia", "openai"
+        }
+        
     def check_prediction(
         self,
         market: Market,
@@ -129,27 +156,46 @@ class SanityChecker:
         return any(keyword in text for keyword in keywords)
         
     def _check_merger_plausibility(self, market: Market, probability: float) -> List[str]:
-        """Check if merger prediction is plausible."""
+        """Check if merger prediction is plausible with comprehensive domain knowledge."""
         warnings = []
         
-        # Extract company names
+        # Extract company names and context
         question = market.question.lower()
+        description = (market.description or "").lower()
+        full_text = f"{question} {description}"
         
-        # Check for unlikely combinations
+        # Enhanced unlikely combinations with reasoning
         unlikely_pairs = [
-            ("x", "truth social"),  # Different owners, competing platforms
-            ("google", "apple"),    # Major competitors
-            ("tesla", "ford"),      # Unlikely combination
+            ("x", "truth social", "Competing platforms with different ownership structures and user bases"),
+            ("google", "apple", "Major competitors with overlapping products (antitrust concerns)"),
+            ("tesla", "ford", "Different EV strategies and manufacturing philosophies"),
+            ("microsoft", "apple", "Historical rivals with competing ecosystems"),
+            ("amazon", "google", "Cloud computing competitors (AWS vs GCP)"),
+            ("meta", "x", "Direct social media competitors under antitrust scrutiny"),
+            ("openai", "google", "AI competition and existing Google AI investments"),
+            ("netflix", "disney", "Streaming competitors with content conflicts")
         ]
         
-        for company1, company2 in unlikely_pairs:
-            if company1 in question and company2 in question:
+        for company1, company2, reason in unlikely_pairs:
+            if company1 in full_text and company2 in full_text:
                 if probability > 0.1:  # More than 10% for unlikely merger
                     warnings.append(
                         f"Merger between {company1.title()} and {company2.title()} "
-                        f"is highly unlikely. Historical precedent suggests < 5% probability."
+                        f"is highly unlikely. {reason}. Historical precedent < 3%."
                     )
                 break
+        
+        # Check for antitrust scrutiny
+        antitrust_warnings = self._check_antitrust_concerns(full_text, probability)
+        warnings.extend(antitrust_warnings)
+        
+        # Industry-specific checks
+        industry_warnings = self._check_industry_feasibility(full_text, probability)
+        warnings.extend(industry_warnings)
+        
+        # Market cap compatibility (if we can infer)
+        size_warnings = self._check_size_compatibility(full_text, probability)
+        warnings.extend(size_warnings)
                 
         # Check timeline feasibility
         if "before" in question or "by" in question:
@@ -220,3 +266,112 @@ class SanityChecker:
             warning_text += "\n\n🔴 **High uncertainty** - Treat this prediction with caution."
             
         return warning_text
+    
+    def _check_antitrust_concerns(self, text: str, probability: float) -> List[str]:
+        """Check for potential antitrust issues."""
+        warnings = []
+        
+        # Count antitrust-sensitive companies
+        antitrust_count = sum(1 for company in self.antitrust_targets if company in text)
+        
+        if antitrust_count >= 2 and probability > 0.15:
+            warnings.append(
+                "Multiple companies under antitrust scrutiny. "
+                "Regulatory approval highly unlikely in current environment."
+            )
+        elif antitrust_count >= 1 and probability > 0.25:
+            warnings.append(
+                "Involves company under antitrust scrutiny. "
+                "Recent regulatory environment suggests <10% approval chance."
+            )
+            
+        # Check for market dominance keywords
+        dominance_keywords = ["monopoly", "market share", "dominant", "competition"]
+        if any(keyword in text for keyword in dominance_keywords) and probability > 0.2:
+            warnings.append(
+                "Market dominance concerns mentioned. "
+                "Antitrust review would likely block merger."
+            )
+            
+        return warnings
+    
+    def _check_industry_feasibility(self, text: str, probability: float) -> List[str]:
+        """Check industry-specific merger feasibility."""
+        warnings = []
+        
+        # Identify industry
+        industry = self._identify_industry(text)
+        
+        if industry:
+            base_rate = self.industry_merger_rates.get(industry, self.merger_base_rate)
+            
+            # Adjust probability expectations based on industry
+            if probability > base_rate * 3:  # 3x industry average
+                warnings.append(
+                    f"{industry.title()} industry historical merger rate: {base_rate:.1%}. "
+                    f"Prediction {probability:.1%} is {probability/base_rate:.1f}x higher than typical."
+                )
+                
+            # Industry-specific regulatory warnings
+            if industry in self.regulatory_hurdles:
+                regulators = ", ".join(self.regulatory_hurdles[industry])
+                if probability > 0.3:
+                    warnings.append(
+                        f"{industry.title()} mergers require approval from: {regulators}. "
+                        f"Complex regulatory process reduces probability."
+                    )
+                    
+        return warnings
+    
+    def _check_size_compatibility(self, text: str, probability: float) -> List[str]:
+        """Check if company sizes are compatible for merger."""
+        warnings = []
+        
+        # Large company indicators
+        large_company_indicators = [
+            "trillion dollar", "fortune 500", "s&p 500", "nasdaq 100",
+            "big tech", "faang", "megacap"
+        ]
+        
+        # Small company indicators  
+        small_company_indicators = [
+            "startup", "series", "funding", "venture", "private",
+            "small cap", "penny stock"
+        ]
+        
+        has_large = any(indicator in text for indicator in large_company_indicators)
+        has_small = any(indicator in text for indicator in small_company_indicators)
+        
+        if has_large and has_small and probability > 0.4:
+            warnings.append(
+                "Significant size mismatch between companies. "
+                "Large acquisitions of small companies more likely than mergers."
+            )
+            
+        # Equal-size merger challenges
+        if "merger of equals" in text and probability > 0.25:
+            warnings.append(
+                "Merger of equals historically has <20% success rate. "
+                "Cultural integration and governance challenges are significant."
+            )
+            
+        return warnings
+    
+    def _identify_industry(self, text: str) -> Optional[str]:
+        """Identify industry from text."""
+        industry_keywords = {
+            "tech": ["technology", "software", "ai", "cloud", "saas", "platform"],
+            "pharma": ["pharmaceutical", "drug", "biotech", "medicine", "clinical"],
+            "finance": ["bank", "financial", "credit", "loan", "investment", "fintech"],
+            "energy": ["oil", "gas", "energy", "renewable", "solar", "wind"],
+            "media": ["media", "entertainment", "streaming", "content", "film", "tv"],
+            "telecom": ["telecom", "wireless", "network", "broadband", "5g"],
+            "defense": ["defense", "military", "aerospace", "weapons", "security"],
+            "social_media": ["social media", "social network", "platform", "x", "twitter", "facebook"]
+        }
+        
+        for industry, keywords in industry_keywords.items():
+            if any(keyword in text for keyword in keywords):
+                return industry
+                
+        return None
