@@ -15,6 +15,7 @@ from src.analyzers.llm_news_analyzer import LLMNewsAnalyzer
 from src.analyzers.market_categorizer import MarketCategorizer
 from src.analyzers.bayesian_updater import BayesianUpdater, Evidence, EvidenceType
 from src.analyzers.political_model import PoliticalMarketModel
+from src.analyzers.crypto_model import CryptoFinancialModel
 
 logger = logging.getLogger(__name__)
 
@@ -43,6 +44,7 @@ class FairValueEngine:
         self.categorizer = MarketCategorizer()
         self.bayesian_updater = BayesianUpdater()
         self.political_model = PoliticalMarketModel()
+        self.crypto_model = CryptoFinancialModel()
         
     async def calculate_fair_value(
         self, 
@@ -67,6 +69,15 @@ class FairValueEngine:
                 return distribution.mean, 1.0 - distribution.mean, reasoning
             except Exception as e:
                 logger.warning(f"Political model failed, falling back to standard approach: {e}")
+        
+        # Check if this is a crypto/financial market that can use advanced modeling
+        if self._is_crypto_financial(market):
+            try:
+                distribution = self.crypto_model.calculate_crypto_probability(market, news_articles)
+                reasoning = self._generate_bayesian_reasoning(distribution, "Advanced crypto/financial model with market data")
+                return distribution.mean, 1.0 - distribution.mean, reasoning
+            except Exception as e:
+                logger.warning(f"Crypto model failed, falling back to standard approach: {e}")
         
         # Use standard approach with Bayesian updating for other markets
         return await self._calculate_standard_fair_value(market, news_articles)
