@@ -137,13 +137,11 @@ class TestCryptoFinancialModel:
         
         # Create test technical indicators
         self.technical_indicators = FinancialIndicators(
-            rsi=58.0,
-            macd_signal="bullish",
-            bollinger_position="middle",
-            volume_trend="increasing",
-            momentum_score=0.65,
-            trend_strength=0.72,
-            volatility_index=0.45
+            vix_level=18.5,
+            spy_trend="bullish",
+            dxy_trend="neutral",
+            bond_yield_10y=4.25,
+            risk_sentiment="risk_on"
         )
         
         # Create test regulatory sentiment
