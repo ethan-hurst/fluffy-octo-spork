@@ -10,7 +10,7 @@ from src.analyzers.sports_model import (
     SportsMarketModel, SportType, EventType, TeamPerformance, 
     CoachingData, PlayerStats, InjuryReport
 )
-from src.clients.polymarket.models import Market
+from src.clients.polymarket.models import Market, Token
 from src.clients.news.models import NewsArticle
 from src.analyzers.bayesian_updater import ProbabilityDistribution
 
@@ -33,7 +33,12 @@ class TestSportsMarketModel:
                 active=True,
                 closed=False,
                 volume=50000.0,
-                end_date_iso=now + timedelta(days=60)
+                end_date_iso=now + timedelta(days=60),
+                tokens=[
+                    Token(token_id="yes_token", outcome="Yes", price=0.5),
+                    Token(token_id="no_token", outcome="No", price=0.5)
+                ],
+                minimum_order_size=1.0
             ),
             "nba_championship": Market(
                 condition_id="nba_champ_1",
@@ -43,7 +48,12 @@ class TestSportsMarketModel:
                 active=True,
                 closed=False,
                 volume=75000.0,
-                end_date_iso=now + timedelta(days=120)
+                end_date_iso=now + timedelta(days=120),
+                tokens=[
+                    Token(token_id="yes_token", outcome="Yes", price=0.5),
+                    Token(token_id="no_token", outcome="No", price=0.5)
+                ],
+                minimum_order_size=1.0
             ),
             "player_retirement": Market(
                 condition_id="retire_1",
@@ -53,7 +63,12 @@ class TestSportsMarketModel:
                 active=True,
                 closed=False,
                 volume=40000.0,
-                end_date_iso=now + timedelta(days=90)
+                end_date_iso=now + timedelta(days=90),
+                tokens=[
+                    Token(token_id="yes_token", outcome="Yes", price=0.5),
+                    Token(token_id="no_token", outcome="No", price=0.5)
+                ],
+                minimum_order_size=1.0
             ),
             "nfl_championship": Market(
                 condition_id="nfl_champ_1",
@@ -63,7 +78,12 @@ class TestSportsMarketModel:
                 active=True,
                 closed=False,
                 volume=100000.0,
-                end_date_iso=now + timedelta(days=180)
+                end_date_iso=now + timedelta(days=180),
+                tokens=[
+                    Token(token_id="yes_token", outcome="Yes", price=0.5),
+                    Token(token_id="no_token", outcome="No", price=0.5)
+                ],
+                minimum_order_size=1.0
             ),
             "mlb_trade": Market(
                 condition_id="mlb_trade_1",
@@ -73,7 +93,12 @@ class TestSportsMarketModel:
                 active=True,
                 closed=False,
                 volume=30000.0,
-                end_date_iso=now + timedelta(days=30)
+                end_date_iso=now + timedelta(days=30),
+                tokens=[
+                    Token(token_id="yes_token", outcome="Yes", price=0.5),
+                    Token(token_id="no_token", outcome="No", price=0.5)
+                ],
+                minimum_order_size=1.0
             )
         }
         

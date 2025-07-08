@@ -9,7 +9,7 @@ from unittest.mock import patch, MagicMock
 from src.analyzers.political_model import (
     PoliticalMarketModel, PollData, ElectionFundamentals
 )
-from src.clients.polymarket.models import Market
+from src.clients.polymarket.models import Market, Token
 from src.clients.news.models import NewsArticle
 from src.analyzers.bayesian_updater import ProbabilityDistribution
 
@@ -32,7 +32,12 @@ class TestPoliticalMarketModel:
                 active=True,
                 closed=False,
                 volume=1000000.0,
-                end_date_iso=now + timedelta(days=300)
+                end_date_iso=now + timedelta(days=300),
+                tokens=[
+                    Token(token_id="yes_token", outcome="Yes", price=0.5),
+                    Token(token_id="no_token", outcome="No", price=0.5)
+                ],
+                minimum_order_size=1.0
             ),
             "biden_election": Market(
                 condition_id="biden_2024",
@@ -42,7 +47,12 @@ class TestPoliticalMarketModel:
                 active=True,
                 closed=False,
                 volume=800000.0,
-                end_date_iso=now + timedelta(days=300)
+                end_date_iso=now + timedelta(days=300),
+                tokens=[
+                    Token(token_id="yes_token", outcome="Yes", price=0.5),
+                    Token(token_id="no_token", outcome="No", price=0.5)
+                ],
+                minimum_order_size=1.0
             ),
             "congressional_control": Market(
                 condition_id="congress_2024",
@@ -52,7 +62,12 @@ class TestPoliticalMarketModel:
                 active=True,
                 closed=False,
                 volume=500000.0,
-                end_date_iso=now + timedelta(days=320)
+                end_date_iso=now + timedelta(days=320),
+                tokens=[
+                    Token(token_id="yes_token", outcome="Yes", price=0.5),
+                    Token(token_id="no_token", outcome="No", price=0.5)
+                ],
+                minimum_order_size=1.0
             )
         }
         

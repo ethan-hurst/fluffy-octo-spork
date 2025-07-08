@@ -7,7 +7,7 @@ from datetime import datetime, timedelta
 from unittest.mock import patch
 
 from src.utils.market_filters import MarketFilter
-from src.clients.polymarket.models import Market
+from src.clients.polymarket.models import Market, Token
 
 
 class TestMarketFilter:
@@ -28,7 +28,12 @@ class TestMarketFilter:
                 active=True,
                 closed=False,
                 volume=50000.0,
-                end_date_iso=now + timedelta(days=20)
+                end_date_iso=now + timedelta(days=20),
+                tokens=[
+                    Token(token_id="yes_token", outcome="Yes", price=0.5),
+                    Token(token_id="no_token", outcome="No", price=0.5)
+                ],
+                minimum_order_size=1.0
             ),
             Market(
                 condition_id="market2", 
@@ -38,7 +43,12 @@ class TestMarketFilter:
                 active=True,
                 closed=False,
                 volume=25000.0,
-                end_date_iso=now + timedelta(days=60)
+                end_date_iso=now + timedelta(days=60),
+                tokens=[
+                    Token(token_id="yes_token", outcome="Yes", price=0.5),
+                    Token(token_id="no_token", outcome="No", price=0.5)
+                ],
+                minimum_order_size=1.0
             ),
             Market(
                 condition_id="market3",
@@ -48,7 +58,12 @@ class TestMarketFilter:
                 active=True,
                 closed=False,
                 volume=75000.0,
-                end_date_iso=now + timedelta(days=120)
+                end_date_iso=now + timedelta(days=120),
+                tokens=[
+                    Token(token_id="yes_token", outcome="Yes", price=0.5),
+                    Token(token_id="no_token", outcome="No", price=0.5)
+                ],
+                minimum_order_size=1.0
             ),
             Market(
                 condition_id="market4",
@@ -58,7 +73,12 @@ class TestMarketFilter:
                 active=True,
                 closed=False,
                 volume=15000.0,
-                end_date_iso=now + timedelta(days=45)
+                end_date_iso=now + timedelta(days=45),
+                tokens=[
+                    Token(token_id="yes_token", outcome="Yes", price=0.5),
+                    Token(token_id="no_token", outcome="No", price=0.5)
+                ],
+                minimum_order_size=1.0
             )
         ]
         
