@@ -138,10 +138,11 @@ class MarketFilter:
             # Calculate days to resolution
             end_date = market.end_date_iso
             if end_date.tzinfo is not None:
-                from datetime import timezone
-                now = now.replace(tzinfo=timezone.utc)
+                # Already timezone aware
+                pass
             else:
-                end_date = end_date.replace(tzinfo=None) if end_date.tzinfo else end_date
+                # Make timezone aware
+                end_date = end_date.replace(tzinfo=timezone.utc)
                 
             days_to_resolution = (end_date - now).days
             
