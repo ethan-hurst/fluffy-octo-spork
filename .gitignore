@@ -4,3 +4,5 @@ __pycache__
 .ruff_cache
 .pytest_cache
 .env
+polymarket_analyzer.log
+polymarket_analyzer.log.bak
