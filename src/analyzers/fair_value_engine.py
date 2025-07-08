@@ -549,13 +549,16 @@ class FairValueEngine:
         # Add adjustments
         final_prob += news_adj + time_adj + market_adj
         
-        # Apply diminishing returns for extreme values
-        if final_prob > 0.8:
+        # Apply diminishing returns for extreme values, but NOT for very low base probabilities
+        # Constitutional amendments and other extremely rare events should stay low
+        if base_prob < 0.05:  # Very rare events (< 5%) - minimal adjustment allowed
+            final_prob = max(0.01, min(0.10, final_prob))  # Cap between 1-10%
+        elif final_prob > 0.8:
             excess = final_prob - 0.8
-            final_prob = 0.8 + (excess * 0.5)  # Diminishing returns
-        elif final_prob < 0.2:
-            deficit = 0.2 - final_prob
-            final_prob = 0.2 - (deficit * 0.5)  # Diminishing returns
+            final_prob = 0.8 + (excess * 0.5)  # Diminishing returns on high end
+        elif final_prob < 0.15:  # Only apply floor for moderate probabilities
+            deficit = 0.15 - final_prob
+            final_prob = 0.15 - (deficit * 0.5)  # Diminishing returns on low end
             
         return final_prob
         
