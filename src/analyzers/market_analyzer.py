@@ -99,9 +99,13 @@ class MarketAnalyzer:
             
         # Calculate sophisticated fair prices using new engine
         try:
-            fair_yes_price, fair_no_price, fair_value_reasoning = self.fair_value_engine.calculate_fair_value(
-                market, news_articles
-            )
+            # Note: This is a sync method but fair_value_engine.calculate_fair_value is async
+            # For now, use the old calculation method
+            fair_prices = self._calculate_fair_prices(market, news_articles)
+            if not fair_prices:
+                return None
+            fair_yes_price, fair_no_price = fair_prices
+            fair_value_reasoning = ""
         except Exception as e:
             logger.error(f"Fair value calculation failed for {market.condition_id}: {e}")
             return None
