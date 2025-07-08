@@ -9,7 +9,7 @@ from datetime import datetime, timedelta, timezone
 from typing import List, Optional
 
 from src.analyzers.models import AnalysisResult, MarketOpportunity, OpportunityScore
-from src.analyzers.refined_simple_analyzer import RefinedSimpleAnalyzer
+from src.analyzers.flexible_analyzer import FlexibleAnalyzer
 from src.analyzers.simple_pattern_analyzer import SimpleOpportunity
 from src.analyzers.kelly_criterion import KellyCriterion
 from src.analyzers.backtesting import BacktestingEngine
@@ -29,7 +29,7 @@ class MarketAnalyzer:
         """Initialize market analyzer."""
         self.min_volume = settings.min_market_volume
         self.min_spread = settings.min_probability_spread
-        self.pattern_analyzer = RefinedSimpleAnalyzer()
+        self.pattern_analyzer = FlexibleAnalyzer()
         self.kelly_criterion = KellyCriterion()
         self.backtesting_engine = BacktestingEngine()
         
@@ -259,16 +259,13 @@ class MarketAnalyzer:
         # Handle timezone-aware datetime comparison
         now = datetime.now(timezone.utc)
         if market.end_date_iso.tzinfo is not None:
-            # Market date is timezone-aware, make now timezone-aware too
-            from datetime import timezone
-            now = now.replace(tzinfo=timezone.utc)
+            # Both are already timezone-aware
+            market_end = market.end_date_iso
         else:
-            # Market date is naive, ensure now is also naive
-            market_end = market.end_date_iso.replace(tzinfo=None) if market.end_date_iso.tzinfo else market.end_date_iso
-            days_until_end = (market_end - now).days
-            return self._calculate_time_score_from_days(days_until_end)
+            # Market date is naive, make it aware
+            market_end = market.end_date_iso.replace(tzinfo=timezone.utc)
             
-        days_until_end = (market.end_date_iso - now).days
+        days_until_end = (market_end - now).days
         return self._calculate_time_score_from_days(days_until_end)
         
     def _calculate_time_score_from_days(self, days_until_end: int) -> float:
@@ -620,11 +617,9 @@ class MarketAnalyzer:
         if market.end_date_iso:
             # Handle timezone-aware datetime comparison
             now = datetime.now(timezone.utc)
-            if market.end_date_iso.tzinfo is not None:
-                from datetime import timezone
-                now = now.replace(tzinfo=timezone.utc)
-            else:
-                market.end_date_iso = market.end_date_iso.replace(tzinfo=None) if market.end_date_iso.tzinfo else market.end_date_iso
+            if market.end_date_iso.tzinfo is None:
+                # Make market date timezone-aware
+                market.end_date_iso = market.end_date_iso.replace(tzinfo=timezone.utc)
                 
             days_until_end = (market.end_date_iso - now).days
             time_score = self._calculate_time_score_from_days(days_until_end)

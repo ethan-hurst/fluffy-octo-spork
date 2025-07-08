@@ -38,7 +38,8 @@
       "Bash(./venv_linux/bin/python -m pytest tests/test_crypto_model.py::TestCryptoFinancialModel::test_calculate_distance_to_target_above -v)",
       "Bash(git add:*)",
       "Bash(timeout:*)",
-      "Bash(git cherry-pick:*)"
+      "Bash(git cherry-pick:*)",
+      "Bash(git push:*)"
     ],
     "deny": []
   }
