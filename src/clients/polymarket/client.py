@@ -12,6 +12,7 @@ from httpx import AsyncClient
 from src.config.settings import settings
 from src.clients.polymarket.models import Market, MarketsResponse, MarketPrice
 from src.clients.polymarket.gamma_models import GammaMarket
+from src.utils.rate_limiter import rate_limiters
 
 logger = logging.getLogger(__name__)
 
@@ -101,6 +102,9 @@ class PolymarketClient:
             params["limit"] = limit
             
         try:
+            # Apply rate limiting
+            await rate_limiters.polymarket.acquire()
+            
             response = await self._client.get("/markets", params=params)
             response.raise_for_status()
             data = response.json()
@@ -180,6 +184,9 @@ class PolymarketClient:
                 "closed": "false",
                 "limit": max_markets * 2  # Fetch extra to filter
             }
+            
+            # Apply rate limiting
+            await rate_limiters.polymarket.acquire()
             
             response = await self._client.get("/markets", params=params)
             response.raise_for_status()

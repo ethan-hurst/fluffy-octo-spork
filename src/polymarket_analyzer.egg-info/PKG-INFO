@@ -7,6 +7,7 @@ Description-Content-Type: text/markdown
 License-File: LICENSE
 Requires-Dist: aiohttp>=3.9.0
 Requires-Dist: pydantic>=2.0.0
+Requires-Dist: pydantic-settings>=2.0.0
 Requires-Dist: python-dotenv>=1.0.0
 Requires-Dist: rich>=13.0.0
 Requires-Dist: click>=8.0.0
@@ -21,299 +22,266 @@ Requires-Dist: ruff>=0.1.0; extra == "dev"
 Requires-Dist: mypy>=1.0.0; extra == "dev"
 Dynamic: license-file
 
-# Context Engineering Template
+# Polymarket Analyzer
 
-A comprehensive template for getting started with Context Engineering - the discipline of engineering context for AI coding assistants so they have the information necessary to get the job done end to end.
+A sophisticated console application that analyzes Polymarket prediction markets to identify high-value betting opportunities by combining market data with current news events and tracking prediction performance over time.
 
-> **Context Engineering is 10x better than prompt engineering and 100x better than vibe coding.**
+## Features
 
-## 🚀 Quick Start
+### 📊 Market Analysis
+- **Real-time Market Data**: Fetches live market data from Polymarket's CLOB API
+- **Fair Value Calculation**: Estimates fair prices using news sentiment, time factors, and market fundamentals
+- **Opportunity Scoring**: Multi-dimensional scoring system considering value, confidence, volume, timing, and news relevance
+- **Risk Assessment**: Categorizes opportunities by risk level (LOW/MEDIUM/HIGH)
 
-```bash
-# 1. Clone this template
-git clone https://github.com/coleam00/Context-Engineering-Intro.git
-cd Context-Engineering-Intro
+### 📰 News Integration
+- **Current Events Monitoring**: Automatically fetches relevant news from NewsAPI
+- **Smart Correlation**: Matches news articles with related prediction markets using keyword analysis
+- **Sentiment Analysis**: Basic sentiment analysis to adjust fair value calculations
+- **Breaking News Detection**: Identifies emerging trends from clustered news articles
 
-# 2. Set up your project rules (optional - template provided)
-# Edit CLAUDE.md to add your project-specific guidelines
+### 📈 Performance Tracking
+- **Prediction Logging**: Automatically tracks high-confidence predictions for hit rate analysis
+- **Performance Metrics**: Comprehensive analytics including hit rate, ROI, and confidence calibration
+- **Historical Analysis**: View predictions by time period, risk level, and confidence buckets
+- **CSV Export**: Export prediction data for external analysis
 
-# 3. Add examples (highly recommended)
-# Place relevant code examples in the examples/ folder
+### 💻 Interactive Console Interface
+- **Rich Display**: Beautiful tables and formatted output using Rich library
+- **Real-time Analysis**: Run market analysis on demand
+- **Detailed Views**: Drill down into specific opportunities for detailed analysis
+- **Command-line Interface**: Simple commands for all functionality
 
-# 4. Create your initial feature request
-# Edit INITIAL.md with your feature requirements
+## Installation
 
-# 5. Generate a comprehensive PRP (Product Requirements Prompt)
-# In Claude Code, run:
-/generate-prp INITIAL.md
+### Prerequisites
+- Python 3.11 or higher
+- Git
 
-# 6. Execute the PRP to implement your feature
-# In Claude Code, run:
-/execute-prp PRPs/your-feature-name.md
-```
+### Setup Steps
 
-## 📚 Table of Contents
+1. **Clone the repository**
+   ```bash
+   git clone <repository-url>
+   cd fluffy-octo-spork
+   ```
 
-- [What is Context Engineering?](#what-is-context-engineering)
-- [Template Structure](#template-structure)
-- [Step-by-Step Guide](#step-by-step-guide)
-- [Writing Effective INITIAL.md Files](#writing-effective-initialmd-files)
-- [The PRP Workflow](#the-prp-workflow)
-- [Using Examples Effectively](#using-examples-effectively)
-- [Best Practices](#best-practices)
+2. **Create virtual environment**
+   ```bash
+   python -m venv venv_linux
+   source venv_linux/bin/activate  # On Windows: venv_linux\Scripts\activate
+   ```
 
-## What is Context Engineering?
+3. **Install dependencies**
+   ```bash
+   pip install -e ".[dev]"
+   ```
 
-Context Engineering represents a paradigm shift from traditional prompt engineering:
+4. **Configure API keys**
+   ```bash
+   cp .env.example .env
+   ```
+   
+   Edit `.env` and add your API keys:
+   ```bash
+   # Required: Get free API key from https://newsapi.org/register
+   NEWS_API_KEY=your_newsapi_key_here
+   
+   # Optional: Polymarket API key (for advanced features)
+   POLYMARKET_API_KEY=your_polymarket_api_key_here
+   ```
 
-### Prompt Engineering vs Context Engineering
+## Usage
 
-**Prompt Engineering:**
-- Focuses on clever wording and specific phrasing
-- Limited to how you phrase a task
-- Like giving someone a sticky note
-
-**Context Engineering:**
-- A complete system for providing comprehensive context
-- Includes documentation, examples, rules, patterns, and validation
-- Like writing a full screenplay with all the details
-
-### Why Context Engineering Matters
-
-1. **Reduces AI Failures**: Most agent failures aren't model failures - they're context failures
-2. **Ensures Consistency**: AI follows your project patterns and conventions
-3. **Enables Complex Features**: AI can handle multi-step implementations with proper context
-4. **Self-Correcting**: Validation loops allow AI to fix its own mistakes
-
-## Template Structure
-
-```
-context-engineering-intro/
-├── .claude/
-│   ├── commands/
-│   │   ├── generate-prp.md    # Generates comprehensive PRPs
-│   │   └── execute-prp.md     # Executes PRPs to implement features
-│   └── settings.local.json    # Claude Code permissions
-├── PRPs/
-│   ├── templates/
-│   │   └── prp_base.md       # Base template for PRPs
-│   └── EXAMPLE_multi_agent_prp.md  # Example of a complete PRP
-├── examples/                  # Your code examples (critical!)
-├── CLAUDE.md                 # Global rules for AI assistant
-├── INITIAL.md               # Template for feature requests
-├── INITIAL_EXAMPLE.md       # Example feature request
-└── README.md                # This file
-```
-
-This template doesn't focus on RAG and tools with context engineering because I have a LOT more in store for that soon. ;)
-
-## Step-by-Step Guide
-
-### 1. Set Up Global Rules (CLAUDE.md)
-
-The `CLAUDE.md` file contains project-wide rules that the AI assistant will follow in every conversation. The template includes:
-
-- **Project awareness**: Reading planning docs, checking tasks
-- **Code structure**: File size limits, module organization
-- **Testing requirements**: Unit test patterns, coverage expectations
-- **Style conventions**: Language preferences, formatting rules
-- **Documentation standards**: Docstring formats, commenting practices
-
-**You can use the provided template as-is or customize it for your project.**
-
-### 2. Create Your Initial Feature Request
-
-Edit `INITIAL.md` to describe what you want to build:
-
-```markdown
-## FEATURE:
-[Describe what you want to build - be specific about functionality and requirements]
-
-## EXAMPLES:
-[List any example files in the examples/ folder and explain how they should be used]
-
-## DOCUMENTATION:
-[Include links to relevant documentation, APIs, or MCP server resources]
-
-## OTHER CONSIDERATIONS:
-[Mention any gotchas, specific requirements, or things AI assistants commonly miss]
-```
-
-**See `INITIAL_EXAMPLE.md` for a complete example.**
-
-### 3. Generate the PRP
-
-PRPs (Product Requirements Prompts) are comprehensive implementation blueprints that include:
-
-- Complete context and documentation
-- Implementation steps with validation
-- Error handling patterns
-- Test requirements
-
-They are similar to PRDs (Product Requirements Documents) but are crafted more specifically to instruct an AI coding assistant.
-
-Run in Claude Code:
-```bash
-/generate-prp INITIAL.md
-```
-
-**Note:** The slash commands are custom commands defined in `.claude/commands/`. You can view their implementation:
-- `.claude/commands/generate-prp.md` - See how it researches and creates PRPs
-- `.claude/commands/execute-prp.md` - See how it implements features from PRPs
-
-The `$ARGUMENTS` variable in these commands receives whatever you pass after the command name (e.g., `INITIAL.md` or `PRPs/your-feature.md`).
-
-This command will:
-1. Read your feature request
-2. Research the codebase for patterns
-3. Search for relevant documentation
-4. Create a comprehensive PRP in `PRPs/your-feature-name.md`
-
-### 4. Execute the PRP
-
-Once generated, execute the PRP to implement your feature:
+### Starting the Application
 
 ```bash
-/execute-prp PRPs/your-feature-name.md
+# Activate virtual environment
+source venv_linux/bin/activate
+
+# Run the application
+python main.py
 ```
 
-The AI coding assistant will:
-1. Read all context from the PRP
-2. Create a detailed implementation plan
-3. Execute each step with validation
-4. Run tests and fix any issues
-5. Ensure all success criteria are met
+### Available Commands
 
-## Writing Effective INITIAL.md Files
+#### Analysis Commands
+- `analyze` - Run complete market analysis
+- `top` - Show top opportunities from last analysis
+- `details <id>` - Show detailed analysis for specific opportunity
+- `refresh` - Clear cache and run fresh analysis
 
-### Key Sections Explained
+#### Tracking Commands
+- `metrics` - Show prediction performance metrics
+- `predictions [days]` - Show recent predictions (default: 30 days)
+- `export <filename>` - Export predictions to CSV file
+- `resolve <id> <outcome>` - Manually resolve prediction (YES/NO/INVALID)
 
-**FEATURE**: Be specific and comprehensive
-- ❌ "Build a web scraper"
-- ✅ "Build an async web scraper using BeautifulSoup that extracts product data from e-commerce sites, handles rate limiting, and stores results in PostgreSQL"
+#### General Commands
+- `help` - Show command menu
+- `quit` - Exit application
 
-**EXAMPLES**: Leverage the examples/ folder
-- Place relevant code patterns in `examples/`
-- Reference specific files and patterns to follow
-- Explain what aspects should be mimicked
+### Example Workflow
 
-**DOCUMENTATION**: Include all relevant resources
-- API documentation URLs
-- Library guides
-- MCP server documentation
-- Database schemas
+1. **Run initial analysis**
+   ```
+   > analyze
+   ```
 
-**OTHER CONSIDERATIONS**: Capture important details
-- Authentication requirements
-- Rate limits or quotas
-- Common pitfalls
-- Performance requirements
+2. **View top opportunities**
+   ```
+   > top
+   ```
 
-## The PRP Workflow
+3. **Get details on specific opportunity**
+   ```
+   > details 1
+   ```
 
-### How /generate-prp Works
+4. **Check prediction performance**
+   ```
+   > metrics
+   ```
 
-The command follows this process:
+5. **Export prediction history**
+   ```
+   > export my_predictions.csv
+   ```
 
-1. **Research Phase**
-   - Analyzes your codebase for patterns
-   - Searches for similar implementations
-   - Identifies conventions to follow
+## Configuration
 
-2. **Documentation Gathering**
-   - Fetches relevant API docs
-   - Includes library documentation
-   - Adds gotchas and quirks
+### Environment Variables
 
-3. **Blueprint Creation**
-   - Creates step-by-step implementation plan
-   - Includes validation gates
-   - Adds test requirements
+| Variable | Required | Default | Description |
+|----------|----------|---------|-------------|
+| `NEWS_API_KEY` | Yes | - | NewsAPI.org API key |
+| `POLYMARKET_API_KEY` | No | - | Polymarket API key |
+| `LOG_LEVEL` | No | `INFO` | Logging level |
+| `CACHE_TTL_SECONDS` | No | `300` | Cache TTL in seconds |
+| `RATE_LIMIT_CALLS` | No | `10` | Rate limit calls per period |
+| `RATE_LIMIT_PERIOD` | No | `60` | Rate limit period in seconds |
+| `MIN_MARKET_VOLUME` | No | `1000` | Minimum market volume to consider |
+| `MIN_PROBABILITY_SPREAD` | No | `0.1` | Minimum probability spread for opportunities |
+| `MAX_MARKETS_TO_ANALYZE` | No | `100` | Maximum number of markets to analyze |
 
-4. **Quality Check**
-   - Scores confidence level (1-10)
-   - Ensures all context is included
+### Analysis Parameters
 
-### How /execute-prp Works
+The analyzer uses several parameters to identify opportunities:
 
-1. **Load Context**: Reads the entire PRP
-2. **Plan**: Creates detailed task list using TodoWrite
-3. **Execute**: Implements each component
-4. **Validate**: Runs tests and linting
-5. **Iterate**: Fixes any issues found
-6. **Complete**: Ensures all requirements met
+- **Minimum Volume**: Markets below this volume threshold are filtered out
+- **Minimum Spread**: Only opportunities with significant price discrepancies are considered
+- **Confidence Threshold**: Only predictions with ≥60% confidence are tracked
+- **Overall Score Threshold**: Only opportunities with ≥50% overall score are logged
 
-See `PRPs/EXAMPLE_multi_agent_prp.md` for a complete example of what gets generated.
+## How It Works
 
-## Using Examples Effectively
+### Market Analysis Process
 
-The `examples/` folder is **critical** for success. AI coding assistants perform much better when they can see patterns to follow.
+1. **Data Collection**
+   - Fetch active markets from Polymarket CLOB API
+   - Retrieve current market prices and metadata
+   - Collect relevant news articles from NewsAPI
 
-### What to Include in Examples
+2. **Fair Value Calculation**
+   - Analyze news sentiment related to each market
+   - Apply time decay factors based on resolution date
+   - Consider category-specific adjustments
+   - Calculate fair YES/NO probabilities
 
-1. **Code Structure Patterns**
-   - How you organize modules
-   - Import conventions
-   - Class/function patterns
+3. **Opportunity Identification**
+   - Compare market prices with fair value estimates
+   - Calculate expected returns and profit potential
+   - Score opportunities across multiple dimensions
+   - Filter by minimum thresholds
 
-2. **Testing Patterns**
-   - Test file structure
-   - Mocking approaches
-   - Assertion styles
+4. **Prediction Tracking**
+   - Log high-confidence predictions automatically
+   - Track outcomes when markets resolve
+   - Calculate performance metrics over time
 
-3. **Integration Patterns**
-   - API client implementations
-   - Database connections
-   - Authentication flows
+### Scoring System
 
-4. **CLI Patterns**
-   - Argument parsing
-   - Output formatting
-   - Error handling
+Each opportunity receives scores across five dimensions:
 
-### Example Structure
+- **Value Score (30% weight)**: Magnitude of price discrepancy
+- **Confidence Score (25% weight)**: Based on news volume, time factors, and market maturity
+- **Volume Score (20% weight)**: Market liquidity and trading activity
+- **Time Score (15% weight)**: Time until market resolution
+- **News Relevance Score (10% weight)**: Quality and relevance of related news
 
-```
-examples/
-├── README.md           # Explains what each example demonstrates
-├── cli.py             # CLI implementation pattern
-├── agent/             # Agent architecture patterns
-│   ├── agent.py      # Agent creation pattern
-│   ├── tools.py      # Tool implementation pattern
-│   └── providers.py  # Multi-provider pattern
-└── tests/            # Testing patterns
-    ├── test_agent.py # Unit test patterns
-    └── conftest.py   # Pytest configuration
-```
+## Data Storage
 
-## Best Practices
+The application stores data locally in the `data/` directory:
 
-### 1. Be Explicit in INITIAL.md
-- Don't assume the AI knows your preferences
-- Include specific requirements and constraints
-- Reference examples liberally
+- `predictions.jsonl` - Line-delimited JSON file with all predictions
+- `performance_metrics.json` - Latest performance metrics
+- Log files in the root directory
 
-### 2. Provide Comprehensive Examples
-- More examples = better implementations
-- Show both what to do AND what not to do
-- Include error handling patterns
+## API Limitations
 
-### 3. Use Validation Gates
-- PRPs include test commands that must pass
-- AI will iterate until all validations succeed
-- This ensures working code on first try
+### NewsAPI
+- Free tier: 1,000 requests per day
+- Rate limiting implemented to respect limits
+- Focused on English language sources
 
-### 4. Leverage Documentation
-- Include official API docs
-- Add MCP server resources
-- Reference specific documentation sections
+### Polymarket
+- Public endpoints available without authentication
+- Private endpoints require API keys and signatures
+- Rate limiting to prevent abuse
 
-### 5. Customize CLAUDE.md
-- Add your conventions
-- Include project-specific rules
-- Define coding standards
+## Troubleshooting
 
-## Resources
+### Common Issues
 
-- [Claude Code Documentation](https://docs.anthropic.com/en/docs/claude-code)
-- [Context Engineering Best Practices](https://www.philschmid.de/context-engineering)
+1. **"NEWS_API_KEY not configured"**
+   - Get a free API key from https://newsapi.org/register
+   - Add it to your `.env` file
+
+2. **"No active markets found"**
+   - Check internet connection
+   - Verify Polymarket API is accessible
+   - Try refreshing with `refresh` command
+
+3. **Import errors**
+   - Ensure virtual environment is activated
+   - Reinstall dependencies: `pip install -e ".[dev]"`
+
+4. **Rate limiting errors**
+   - Wait for rate limit reset
+   - Adjust rate limit settings in `.env`
+
+### Logging
+
+The application logs to both console and file:
+- Console: INFO level and above
+- File: `polymarket_analyzer.log` with all levels
+
+## Security Considerations
+
+- API keys are stored in environment variables, not code
+- No sensitive data is logged
+- Rate limiting prevents API abuse
+- Input validation on all user commands
+
+## Contributing
+
+1. Follow the existing code style and patterns
+2. Add type hints to all functions
+3. Include docstrings for new classes and methods
+4. Write unit tests for new functionality
+5. Update this README for new features
+
+## Disclaimer
+
+This tool is for educational and research purposes only. 
+
+- **Not Financial Advice**: The analysis provided by this tool should not be considered financial advice
+- **No Guarantee**: Past performance does not guarantee future results
+- **Risk Warning**: Prediction markets involve risk and you may lose money
+- **Beta Software**: This is experimental software that may contain bugs
+
+Always do your own research and never invest more than you can afford to lose.
+
+## License
+
+MIT License - see LICENSE file for details.

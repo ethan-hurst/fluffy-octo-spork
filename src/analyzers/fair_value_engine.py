@@ -12,6 +12,7 @@ from dataclasses import dataclass
 from src.clients.polymarket.models import Market
 from src.clients.news.models import NewsArticle
 from src.analyzers.llm_news_analyzer import LLMNewsAnalyzer
+from src.analyzers.market_categorizer import MarketCategorizer
 
 logger = logging.getLogger(__name__)
 
@@ -37,6 +38,7 @@ class FairValueEngine:
         self.base_rates = self._load_base_rates()
         self.market_patterns = self._load_market_patterns()
         self.llm_news_analyzer = LLMNewsAnalyzer()
+        self.categorizer = MarketCategorizer()
         
     async def calculate_fair_value(
         self, 
@@ -97,6 +99,10 @@ class FairValueEngine:
         if self._is_multi_party_election(market):
             return self._calculate_multi_party_probability(market)
             
+        # Constitutional Amendments (must come before general political)
+        if self._is_constitutional_amendment(market):
+            return self._calculate_constitutional_probability(market)
+            
         # Binary Political Events
         if self._is_political_binary(market):
             return self._calculate_political_binary_probability(market)
@@ -117,8 +123,9 @@ class FairValueEngine:
         if self._is_rare_event(market):
             return self._calculate_rare_event_probability(market)
             
-        # Default fallback with reasoning
-        return 0.3, "Unknown market type - using conservative 30% baseline"
+        # Use learning categorizer for unknown types
+        category, baseline_prob, reasoning = self.categorizer.categorize_market(market)
+        return baseline_prob, reasoning
         
     def _is_multi_party_election(self, market: Market) -> bool:
         """Check if this is a multi-party election market."""
@@ -218,6 +225,74 @@ class FairValueEngine:
             return 0.15, "Political removals are rare (~15% historical rate)"
             
         return 0.40, "Generic political event baseline (40%)"
+        
+    def _is_constitutional_amendment(self, market: Market) -> bool:
+        """Check if this market involves a Constitutional amendment."""
+        question = market.question.lower()
+        description = (market.description or "").lower()
+        
+        # Direct constitutional amendment indicators
+        constitutional_indicators = [
+            "constitutional amendment", "22nd amendment", "term limits", "repeal",
+            "constitution", "amendment", "supreme court", "constitutional"
+        ]
+        
+        # Actions that require constitutional changes
+        action_indicators = [
+            "repeal presidential term limits", "change term limits", "third term",
+            "more than two terms", "eliminate term limits", "extend presidency"
+        ]
+        
+        # Check in both question and description
+        full_text = f"{question} {description}"
+        
+        has_constitutional = any(indicator in full_text for indicator in constitutional_indicators)
+        has_action = any(indicator in full_text for indicator in action_indicators)
+        
+        # Specific Trump term limits case
+        is_trump_term_limits = "trump" in full_text and any(term in full_text for term in ["term limit", "22nd amendment", "third term"])
+        
+        return has_constitutional and has_action or is_trump_term_limits
+        
+    def _calculate_constitutional_probability(self, market: Market) -> Tuple[float, str]:
+        """Calculate probability for Constitutional amendment markets."""
+        question = market.question.lower()
+        description = (market.description or "").lower()
+        full_text = f"{question} {description}"
+        
+        # Check timeline - constitutional amendments take years typically
+        days_remaining = self._get_days_remaining(market)
+        
+        if days_remaining and days_remaining < 365:  # Less than 1 year
+            # Constitutional amendments virtually impossible in under 1 year
+            if days_remaining < 180:  # Less than 6 months
+                return 0.005, "Constitutional amendment impossible in <6 months (0.5% for extreme edge cases)"
+            else:
+                return 0.01, "Constitutional amendment extremely unlikely in <1 year (1% baseline)"
+        
+        # Long-term constitutional amendments (>1 year)
+        if "22nd amendment" in full_text or "term limits" in full_text:
+            return 0.02, "Repealing 22nd Amendment requires 2/3 Congress + 3/4 states - historically impossible (2%)"
+            
+        if "supreme court" in full_text and any(term in full_text for term in ["overturn", "rule", "decision"]):
+            return 0.03, "Supreme Court overturning constitutional precedent extremely rare (3%)"
+            
+        # Generic constitutional amendment
+        return 0.015, "Constitutional amendments succeed <2% of the time historically (1.5%)"
+        
+    def _get_days_remaining(self, market: Market) -> Optional[int]:
+        """Get days remaining until market resolution."""
+        if not market.end_date_iso:
+            return None
+            
+        now = datetime.now()
+        if market.end_date_iso.tzinfo is not None:
+            from datetime import timezone
+            now = now.replace(tzinfo=timezone.utc)
+        else:
+            market.end_date_iso = market.end_date_iso.replace(tzinfo=None)
+            
+        return (market.end_date_iso - now).days
         
     def _is_crypto_financial(self, market: Market) -> bool:
         """Check if this is a crypto/financial market."""
@@ -505,6 +580,21 @@ class FairValueEngine:
         reasoning_parts.append(f"Final fair value: {final_prob:.1%}")
         
         return " | ".join(reasoning_parts)
+        
+    def learn_from_outcome(self, condition_id: str, actual_outcome: bool, final_probability: float) -> None:
+        """
+        Learn from market outcomes to improve future predictions.
+        
+        Args:
+            condition_id: Market condition ID
+            actual_outcome: Whether market resolved to YES
+            final_probability: Market price at resolution
+        """
+        self.categorizer.learn_from_outcomes(condition_id, actual_outcome, final_probability)
+        
+    def get_learning_suggestions(self) -> List[Dict]:
+        """Get suggestions for new market categories to add."""
+        return self.categorizer.suggest_new_patterns()
         
     def _load_base_rates(self) -> Dict[str, BaseRateData]:
         """Load historical base rates (placeholder for future database)."""

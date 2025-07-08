@@ -203,7 +203,7 @@ class PolymarketAnalyzerApp:
                     
                 # Run analysis
                 progress.update(task, description="Analyzing opportunities...")
-                self.last_analysis = self.market_analyzer.analyze_markets(
+                self.last_analysis = await self.market_analyzer.analyze_markets(
                     markets, market_prices, news_articles
                 )
                 

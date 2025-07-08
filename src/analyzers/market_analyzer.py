@@ -28,7 +28,7 @@ class MarketAnalyzer:
         self.min_spread = settings.min_probability_spread
         self.fair_value_engine = FairValueEngine()
         
-    def analyze_markets(
+    async def analyze_markets(
         self,
         markets: List[Market],
         market_prices: List[MarketPrice],
@@ -53,7 +53,7 @@ class MarketAnalyzer:
         
         for market in markets:
             try:
-                opportunity = self._analyze_single_market(
+                opportunity = await self._analyze_single_market(
                     market, 
                     price_lookup.get(market.condition_id),
                     news_articles
@@ -73,7 +73,7 @@ class MarketAnalyzer:
             news_articles_processed=len(news_articles)
         )
         
-    def _analyze_single_market(
+    async def _analyze_single_market(
         self,
         market: Market,
         price: Optional[MarketPrice],
@@ -99,13 +99,9 @@ class MarketAnalyzer:
             
         # Calculate sophisticated fair prices using new engine
         try:
-            # Note: This is a sync method but fair_value_engine.calculate_fair_value is async
-            # For now, use the old calculation method
-            fair_prices = self._calculate_fair_prices(market, news_articles)
-            if not fair_prices:
-                return None
-            fair_yes_price, fair_no_price = fair_prices
-            fair_value_reasoning = ""
+            fair_yes_price, fair_no_price, fair_value_reasoning = await self.fair_value_engine.calculate_fair_value(
+                market, news_articles
+            )
         except Exception as e:
             logger.error(f"Fair value calculation failed for {market.condition_id}: {e}")
             return None
@@ -186,56 +182,6 @@ class MarketAnalyzer:
             related_news=[article.title for article in related_news[:3]]
         )
         
-    def _calculate_fair_prices(
-        self,
-        market: Market,
-        news_articles: List[NewsArticle]
-    ) -> Optional[tuple[float, float]]:
-        """
-        Calculate fair prices based on available information.
-        
-        This is a simplified implementation. In practice, this would involve
-        more sophisticated models considering:
-        - Historical data
-        - Market fundamentals
-        - News sentiment analysis
-        - Expert predictions
-        - Polling data (for political markets)
-        - Statistical models
-        
-        Args:
-            market: Market to analyze
-            news_articles: Related news articles
-            
-        Returns:
-            Optional[tuple[float, float]]: (fair_yes_price, fair_no_price) or None
-        """
-        # Basic fair value estimation
-        related_news = self._find_related_news(market, news_articles)
-        
-        # News sentiment adjustment
-        news_sentiment = self._analyze_news_sentiment(related_news)
-        
-        # Time decay factor (markets closer to resolution are more reliable)
-        time_factor = self._calculate_time_factor(market)
-        
-        # Get base probability based on market type and current prices
-        base_probability = self._get_base_probability(market)
-        
-        # Adjust based on news sentiment (-0.15 to +0.15, reduced impact)
-        sentiment_adjustment = news_sentiment * 0.15
-        
-        # Adjust based on market category knowledge
-        category_adjustment = self._get_category_adjustment(market)
-        
-        # Calculate fair probability
-        fair_probability = base_probability + sentiment_adjustment + category_adjustment
-        fair_probability = max(0.01, min(0.99, fair_probability))  # Clamp to reasonable range
-        
-        fair_yes_price = fair_probability
-        fair_no_price = 1.0 - fair_probability
-        
-        return fair_yes_price, fair_no_price
         
     def _analyze_news_sentiment(self, news_articles: List[NewsArticle]) -> float:
         """

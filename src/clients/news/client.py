@@ -12,6 +12,7 @@ from httpx import AsyncClient
 
 from src.config.settings import settings
 from src.clients.news.models import NewsArticle, NewsResponse
+from src.utils.rate_limiter import rate_limiters
 
 logger = logging.getLogger(__name__)
 
@@ -110,6 +111,9 @@ class NewsClient:
             params["to"] = to_date.isoformat()
             
         try:
+            # Apply rate limiting
+            await rate_limiters.newsapi.acquire()
+            
             response = await self._client.get("/everything", params=params)
             response.raise_for_status()
             data = response.json()

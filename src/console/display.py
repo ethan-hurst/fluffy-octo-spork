@@ -301,4 +301,7 @@ Enter command:
         
     def print(self, *args, **kwargs) -> None:
         """Print to console (convenience method)."""
-        self.console.print(*args, **kwargs)
+        if not args:
+            self.console.print()
+        else:
+            self.console.print(*args, **kwargs)
