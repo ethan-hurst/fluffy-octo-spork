@@ -73,7 +73,7 @@ class MarketAnalyzer:
             news_articles_processed=len(news_articles)
         )
         
-    async def _analyze_single_market(
+    def _analyze_single_market(
         self,
         market: Market,
         price: Optional[MarketPrice],

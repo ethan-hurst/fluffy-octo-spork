@@ -11,6 +11,7 @@ from httpx import AsyncClient
 
 from src.config.settings import settings
 from src.clients.polymarket.models import Market, MarketsResponse, MarketPrice
+from src.clients.polymarket.gamma_models import GammaMarket
 
 logger = logging.getLogger(__name__)
 
@@ -123,6 +124,12 @@ class PolymarketClient:
         """
         max_markets = max_markets or settings.max_markets_to_analyze
         all_markets = []
+        
+        # Use Gamma API if base URL is gamma-api
+        if "gamma-api" in self.base_url:
+            return await self._get_gamma_markets(max_markets)
+        
+        # Original CLOB API logic
         next_cursor = None
         
         # Fetch more markets initially to ensure we have enough after filtering
@@ -156,6 +163,56 @@ class PolymarketClient:
         logger.info(f"Filter summary: {market_filter.get_filter_summary()}")
         
         return final_markets
+    
+    async def _get_gamma_markets(self, max_markets: int) -> List[Market]:
+        """
+        Get markets from Gamma API.
+        
+        Args:
+            max_markets: Maximum number of markets to return
+            
+        Returns:
+            List[Market]: List of active markets
+        """
+        try:
+            params = {
+                "active": "true",
+                "closed": "false",
+                "limit": max_markets * 2  # Fetch extra to filter
+            }
+            
+            response = await self._client.get("/markets", params=params)
+            response.raise_for_status()
+            
+            gamma_markets = []
+            for market_data in response.json():
+                try:
+                    gamma_market = GammaMarket(**market_data)
+                    # Filter out archived or truly inactive markets
+                    if (gamma_market.active and 
+                        not gamma_market.closed and 
+                        not gamma_market.archived and
+                        gamma_market.get_total_volume() > settings.min_market_volume):
+                        gamma_markets.append(gamma_market)
+                except Exception as e:
+                    logger.debug(f"Skipping invalid market: {e}")
+                    continue
+            
+            # Convert to CLOB format and sort by volume
+            clob_markets = [gm.to_clob_market() for gm in gamma_markets]
+            clob_markets.sort(key=lambda m: m.volume or 0, reverse=True)
+            
+            # Apply filters
+            from src.utils.market_filters import market_filter
+            filtered_markets = market_filter.filter_markets(clob_markets[:max_markets])
+            
+            logger.info(f"Fetched {len(gamma_markets)} gamma markets, returning {len(filtered_markets)} after filtering")
+            
+            return filtered_markets
+            
+        except Exception as e:
+            logger.error(f"Error fetching gamma markets: {e}")
+            return []
         
     async def get_market_prices(self, market: Market) -> Optional[MarketPrice]:
         """
