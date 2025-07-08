@@ -265,3 +265,11 @@ class PolymarketClient:
             no_price=no_token.price,
             spread=abs(yes_token.price - no_token.price)
         )
+    
+    def _parse_market(self, data: Dict) -> Optional[Market]:
+        """Parse market data from API response."""
+        try:
+            return Market(**data)
+        except Exception as e:
+            logger.error(f"Error parsing market data: {e}")
+            return None

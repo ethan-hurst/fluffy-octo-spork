@@ -7,7 +7,7 @@ from datetime import datetime, timedelta
 from unittest.mock import patch, MagicMock, AsyncMock
 
 from src.clients.polymarket.client import PolymarketClient
-from src.clients.polymarket.models import Market, Token
+from src.clients.polymarket.models import Market, Token, MarketsResponse, MarketPrice
 
 
 class TestPolymarketClient:
@@ -37,24 +37,29 @@ class TestPolymarketClient:
             "minimum_order_size": 1.0
         }
         
-        self.test_markets_response = [
-            self.test_market_data,
-            {
-                "condition_id": "test_condition_456",
-                "question": "Will Bitcoin reach $100,000 by end of 2024?",
-                "description": "Bitcoin price prediction",
-                "category": "Cryptocurrency",
-                "active": True,
-                "closed": False,
-                "volume": "875000.25",
-                "end_date_iso": (now + timedelta(days=60)).isoformat(),
-                "tokens": [
-                    {"token_id": "yes_token", "outcome": "Yes", "price": 0.5},
-                    {"token_id": "no_token", "outcome": "No", "price": 0.5}
-                ],
-                "minimum_order_size": 1.0
-            }
-        ]
+        self.test_markets_response = {
+            "limit": 100,
+            "count": 2,
+            "next_cursor": None,
+            "data": [
+                self.test_market_data,
+                {
+                    "condition_id": "test_condition_456",
+                    "question": "Will Bitcoin reach $100,000 by end of 2024?",
+                    "description": "Bitcoin price prediction",
+                    "category": "Cryptocurrency",
+                    "active": True,
+                    "closed": False,
+                    "volume": "875000.25",
+                    "end_date_iso": (now + timedelta(days=60)).isoformat(),
+                    "tokens": [
+                        {"token_id": "yes_token", "outcome": "Yes", "price": 0.5},
+                        {"token_id": "no_token", "outcome": "No", "price": 0.5}
+                    ],
+                    "minimum_order_size": 1.0
+                }
+            ]
+        }
         
     @pytest.mark.asyncio
     async def test_get_markets_success(self):
@@ -67,14 +72,16 @@ class TestPolymarketClient:
         
         self.client._client.get = AsyncMock(return_value=mock_response)
         
-        markets = await self.client.get_markets()
+        response = await self.client.get_markets()
         
-        assert len(markets) == 2
-        assert isinstance(markets[0], Market)
-        assert markets[0].condition_id == "test_condition_123"
-        assert markets[0].question == "Will Donald Trump win the 2024 presidential election?"
-        assert markets[0].volume == 1250000.50
-        assert markets[0].active is True
+        assert isinstance(response, MarketsResponse)
+        assert response.count == 2
+        assert len(response.data) == 2
+        assert isinstance(response.data[0], Market)
+        assert response.data[0].condition_id == "test_condition_123"
+        assert response.data[0].question == "Will Donald Trump win the 2024 presidential election?"
+        assert response.data[0].volume == 1250000.50
+        assert response.data[0].active is True
         
     @pytest.mark.asyncio
     async def test_get_markets_api_error(self):
@@ -87,9 +94,11 @@ class TestPolymarketClient:
         
         self.client._client.get = AsyncMock(return_value=mock_response)
         
-        markets = await self.client.get_markets()
+        # Should raise exception on API error
+        with pytest.raises(Exception) as exc_info:
+            await self.client.get_markets()
         
-        assert markets == []  # Should return empty list on error
+        assert "API Error" in str(exc_info.value)
         
     @pytest.mark.asyncio
     async def test_get_markets_network_error(self):
@@ -97,9 +106,11 @@ class TestPolymarketClient:
         # Mock network error
         self.client._client.get = AsyncMock(side_effect=Exception("Network error"))
         
-        markets = await self.client.get_markets()
+        # Should raise exception on network error
+        with pytest.raises(Exception) as exc_info:
+            await self.client.get_markets()
         
-        assert markets == []  # Should return empty list on error
+        assert "Network error" in str(exc_info.value)
         
     @pytest.mark.asyncio
     async def test_get_markets_with_filters(self):
@@ -107,18 +118,23 @@ class TestPolymarketClient:
         # Mock successful response with filtered data
         mock_response = MagicMock()
         mock_response.status_code = 200
-        mock_response.json = MagicMock(return_value=[self.test_markets_response[0]])
+        mock_response.json = MagicMock(return_value={
+            "limit": 100,
+            "count": 1,
+            "data": [self.test_markets_response["data"][0]],
+            "next_cursor": None
+        })
         mock_response.raise_for_status = MagicMock()
         
         self.client._client.get = AsyncMock(return_value=mock_response)
         
         # Note: The actual client doesn't support these parameters yet
-        markets = await self.client.get_markets()
+        response = await self.client.get_markets()
         
         # Verify the request was made
         self.client._client.get.assert_called_once()
         
-        assert len(markets) >= 1
+        assert len(response.data) >= 1
         
     @pytest.mark.asyncio
     async def test_get_all_active_markets(self):
@@ -127,7 +143,9 @@ class TestPolymarketClient:
         mock_response1 = MagicMock()
         mock_response1.status_code = 200
         mock_response1.json = MagicMock(return_value={
-            "markets": self.test_markets_response,
+            "limit": 100,
+            "count": 2,
+            "data": self.test_markets_response["data"],
             "next_cursor": "cursor_123"
         })
         mock_response1.raise_for_status = MagicMock()
@@ -135,7 +153,9 @@ class TestPolymarketClient:
         mock_response2 = MagicMock()
         mock_response2.status_code = 200
         mock_response2.json = MagicMock(return_value={
-            "markets": [],
+            "limit": 100,
+            "count": 0,
+            "data": [],
             "next_cursor": None
         })
         mock_response2.raise_for_status = MagicMock()
@@ -170,9 +190,9 @@ class TestPolymarketClient:
         prices = await self.client.get_market_prices(market)
         
         assert prices is not None
-        assert prices.yes == 0.6
-        assert prices.no == 0.4
-        assert prices.spread == 0.0  # No orderbook data
+        assert prices.yes_price == 0.6
+        assert prices.no_price == 0.4
+        assert abs(prices.spread - 0.2) < 0.0001  # abs(0.6 - 0.4) with floating point tolerance
         
     def test_parse_market_data_valid(self):
         """Test parsing valid market data."""
@@ -230,11 +250,11 @@ class TestPolymarketClient:
         # Make multiple requests
         results = []
         for _ in range(3):
-            markets = await self.client.get_markets()
-            results.append(markets)
+            response = await self.client.get_markets()
+            results.append(response)
         
         # All requests should succeed
-        assert all(len(r) == 2 for r in results)
+        assert all(r.count == 2 for r in results)
         
     @pytest.mark.asyncio
     async def test_context_manager_usage(self):

@@ -5,7 +5,7 @@ Pydantic models for NewsAPI responses.
 from datetime import datetime
 from typing import List, Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 
 
 class NewsSource(BaseModel):
@@ -21,14 +21,15 @@ class NewsArticle(BaseModel):
     """
     News article information.
     """
+    model_config = ConfigDict(populate_by_name=True)
     
     source: NewsSource = Field(..., description="Article source")
     author: Optional[str] = Field(None, description="Article author")
     title: str = Field(..., description="Article title")
     description: Optional[str] = Field(None, description="Article description")
     url: str = Field(..., description="Article URL")
-    url_to_image: Optional[str] = Field(None, description="Article image URL")
-    published_at: datetime = Field(..., description="Publication date")
+    url_to_image: Optional[str] = Field(None, alias="urlToImage", description="Article image URL")
+    published_at: datetime = Field(..., alias="publishedAt", description="Publication date")
     content: Optional[str] = Field(None, description="Article content")
     
     @property
