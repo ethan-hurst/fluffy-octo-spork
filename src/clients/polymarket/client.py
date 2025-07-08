@@ -4,6 +4,7 @@ Polymarket CLOB API client.
 
 import asyncio
 import logging
+from datetime import datetime
 from typing import Dict, List, Optional
 
 import httpx
@@ -142,8 +143,29 @@ class PolymarketClient:
         while len(all_markets) < fetch_limit:
             response = await self.get_markets(next_cursor=next_cursor, limit=100)
             
-            # Filter active markets
-            active_markets = [m for m in response.data if m.active and not m.closed]
+            # Filter active markets and ensure they haven't ended
+            now = datetime.now()
+            active_markets = []
+            for m in response.data:
+                if m.active and not m.closed:
+                    # Check if market has ended
+                    if m.end_date_iso:
+                        # Make datetime comparison timezone-aware
+                        end_date = m.end_date_iso
+                        if end_date.tzinfo is None:
+                            from datetime import timezone
+                            end_date = end_date.replace(tzinfo=timezone.utc)
+                            now_tz = now.replace(tzinfo=timezone.utc)
+                        else:
+                            now_tz = now.astimezone(end_date.tzinfo)
+                        
+                        # Only include if end date is in the future
+                        if end_date > now_tz:
+                            active_markets.append(m)
+                    else:
+                        # No end date, include it
+                        active_markets.append(m)
+            
             all_markets.extend(active_markets)
             
             # Check if we have more pages
@@ -200,7 +222,18 @@ class PolymarketClient:
                         not gamma_market.closed and 
                         not gamma_market.archived and
                         gamma_market.get_total_volume() > settings.min_market_volume):
-                        gamma_markets.append(gamma_market)
+                        # Check if market has ended
+                        if gamma_market.endDate:
+                            try:
+                                end_date = datetime.fromisoformat(gamma_market.endDate.replace('Z', '+00:00'))
+                                if end_date > datetime.now(end_date.tzinfo):
+                                    gamma_markets.append(gamma_market)
+                            except:
+                                # If date parsing fails, skip the market
+                                logger.debug(f"Failed to parse end date for {gamma_market.question[:50]}")
+                        else:
+                            # No end date, include it
+                            gamma_markets.append(gamma_market)
                 except Exception as e:
                     logger.debug(f"Skipping invalid market: {e}")
                     continue
