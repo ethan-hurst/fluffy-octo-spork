@@ -21,6 +21,8 @@ from src.analyzers.entertainment_model import EntertainmentMarketModel
 from src.analyzers.weather_model import WeatherClimateModel
 from src.analyzers.technology_model import TechnologyMarketModel
 from src.analyzers.sanity_checker import SanityChecker
+from src.analyzers.kelly_criterion import KellyCriterion
+from src.analyzers.backtesting import BacktestingEngine
 
 logger = logging.getLogger(__name__)
 
@@ -55,6 +57,8 @@ class FairValueEngine:
         self.weather_model = WeatherClimateModel()
         self.technology_model = TechnologyMarketModel()
         self.sanity_checker = SanityChecker()
+        self.kelly_criterion = KellyCriterion()
+        self.backtesting_engine = BacktestingEngine()
         
     async def calculate_fair_value(
         self, 

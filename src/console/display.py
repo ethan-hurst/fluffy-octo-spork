@@ -164,6 +164,22 @@ class DisplayManager:
             
         content.append("")
         
+        # Kelly Criterion analysis
+        if opportunity.kelly_analysis:
+            kelly = opportunity.kelly_analysis
+            content.append("[bold]Kelly Criterion Position Sizing:[/bold]")
+            content.append(f"  Recommended Position: {kelly.recommended_fraction:.1%} of bankroll")
+            content.append(f"  Expected Value: {kelly.expected_value:.1%}")
+            content.append(f"  Kelly Recommendation: {kelly.recommendation}")
+            content.append(f"  Probability of Ruin: {kelly.probability_of_ruin:.1%}")
+            
+            if kelly.warnings:
+                content.append("  [yellow]Warnings:[/yellow]")
+                for warning in kelly.warnings[:2]:  # Show top 2 warnings
+                    content.append(f"    • {warning}")
+                    
+            content.append("")
+        
         # Analysis reasoning
         content.append(f"[bold]Analysis Reasoning:[/bold]")
         content.append(f"  {opportunity.reasoning}")

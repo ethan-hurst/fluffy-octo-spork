@@ -10,6 +10,8 @@ from typing import List, Optional
 
 from src.analyzers.models import AnalysisResult, MarketOpportunity, OpportunityScore
 from src.analyzers.fair_value_engine import FairValueEngine
+from src.analyzers.kelly_criterion import KellyCriterion
+from src.analyzers.backtesting import BacktestingEngine
 from src.clients.news.models import NewsArticle
 from src.clients.polymarket.models import Market, MarketPrice
 from src.config.settings import settings
@@ -27,6 +29,8 @@ class MarketAnalyzer:
         self.min_volume = settings.min_market_volume
         self.min_spread = settings.min_probability_spread
         self.fair_value_engine = FairValueEngine()
+        self.kelly_criterion = KellyCriterion()
+        self.backtesting_engine = BacktestingEngine()
         
     async def analyze_markets(
         self,
@@ -161,7 +165,8 @@ class MarketAnalyzer:
             market, price, fair_yes_price, fair_no_price, related_news, fair_value_reasoning
         )
         
-        return MarketOpportunity(
+        # Create the opportunity first
+        opportunity = MarketOpportunity(
             condition_id=market.condition_id,
             question=market.question,
             description=market.description,
@@ -181,6 +186,29 @@ class MarketAnalyzer:
             reasoning=reasoning,
             related_news=[article.title for article in related_news[:3]]
         )
+        
+        # Add Kelly Criterion analysis
+        try:
+            predicted_prob = fair_yes_price if recommended_position == "YES" else fair_no_price
+            kelly_analysis = self.kelly_criterion.calculate(
+                market=market,
+                predicted_probability=predicted_prob,
+                confidence=score.confidence_score,
+                recommended_position=recommended_position
+            )
+            opportunity.kelly_analysis = kelly_analysis
+            
+            # Record prediction for backtesting
+            self.backtesting_engine.record_prediction(
+                market=market,
+                opportunity=opportunity,
+                model_version="v2024.1"  # Update this as model evolves
+            )
+            
+        except Exception as e:
+            logger.warning(f"Failed to calculate Kelly Criterion for {market.condition_id}: {e}")
+            
+        return opportunity
         
         
     def _analyze_news_sentiment(self, news_articles: List[NewsArticle]) -> float:
