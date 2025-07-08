@@ -13,6 +13,8 @@ from src.clients.polymarket.models import Market
 from src.clients.news.models import NewsArticle
 from src.analyzers.llm_news_analyzer import LLMNewsAnalyzer
 from src.analyzers.market_categorizer import MarketCategorizer
+from src.analyzers.bayesian_updater import BayesianUpdater, Evidence, EvidenceType
+from src.analyzers.political_model import PoliticalMarketModel
 
 logger = logging.getLogger(__name__)
 
@@ -39,6 +41,8 @@ class FairValueEngine:
         self.market_patterns = self._load_market_patterns()
         self.llm_news_analyzer = LLMNewsAnalyzer()
         self.categorizer = MarketCategorizer()
+        self.bayesian_updater = BayesianUpdater()
+        self.political_model = PoliticalMarketModel()
         
     async def calculate_fair_value(
         self, 
@@ -46,7 +50,7 @@ class FairValueEngine:
         news_articles: List[NewsArticle]
     ) -> Tuple[float, float, str]:
         """
-        Calculate sophisticated fair value for a market.
+        Calculate sophisticated fair value for a market using Bayesian updating.
         
         Args:
             market: Market to analyze
@@ -55,37 +59,85 @@ class FairValueEngine:
         Returns:
             Tuple[float, float, str]: (fair_yes_price, fair_no_price, reasoning)
         """
+        # Check if this is a political market that can use advanced modeling
+        if self._is_political_binary(market) and not self._is_constitutional_amendment(market):
+            try:
+                distribution = self.political_model.calculate_political_probability(market, news_articles)
+                reasoning = self._generate_bayesian_reasoning(distribution, "Advanced political model with polling/fundamentals")
+                return distribution.mean, 1.0 - distribution.mean, reasoning
+            except Exception as e:
+                logger.warning(f"Political model failed, falling back to standard approach: {e}")
+        
+        # Use standard approach with Bayesian updating for other markets
+        return await self._calculate_standard_fair_value(market, news_articles)
+        
+    async def _calculate_standard_fair_value(
+        self, 
+        market: Market, 
+        news_articles: List[NewsArticle]
+    ) -> Tuple[float, float, str]:
+        """Calculate fair value using standard approach with Bayesian updating."""
+        
         # Step 1: Get intelligent base probability
         base_prob, base_reasoning = self._get_base_probability(market)
         is_constitutional = self._is_constitutional_amendment(market)
         
-        # Step 2: Apply sophisticated news sentiment adjustment
+        # Step 2: Create evidence list for Bayesian updating
+        evidence_list = []
+        
+        # Add news evidence
         news_adjustment, news_reasoning = await self._calculate_llm_news_adjustment(news_articles, market)
+        if abs(news_adjustment) > 0.01:
+            evidence_list.append(self.bayesian_updater.create_evidence(
+                evidence_type=EvidenceType.NEWS_SENTIMENT,
+                positive_signal=news_adjustment > 0,
+                strength=min(abs(news_adjustment) * 10, 1.0),  # Scale to 0-1
+                confidence=0.6,
+                description=f"News analysis: {news_reasoning}",
+                source="news_analyzer"
+            ))
         
-        # Step 3: Apply temporal factors (skip for constitutional amendments - already factored in)
-        if is_constitutional:
-            time_adjustment, time_reasoning = 0.0, "Constitutional amendment timeline already factored into base probability"
-        else:
+        # Add time-based evidence (skip for constitutional amendments)
+        if not is_constitutional:
             time_adjustment, time_reasoning = self._calculate_time_adjustment(market)
+            if abs(time_adjustment) > 0.01:
+                evidence_list.append(self.bayesian_updater.create_evidence(
+                    evidence_type=EvidenceType.TIME_DECAY,
+                    positive_signal=time_adjustment > 0,
+                    strength=min(abs(time_adjustment) * 20, 1.0),  # Scale to 0-1
+                    confidence=0.7,
+                    description=f"Time factors: {time_reasoning}",
+                    source="time_analysis"
+                ))
         
-        # Step 4: Apply market-specific factors
+        # Add market behavior evidence
         market_adjustment, market_reasoning = self._calculate_market_adjustment(market)
+        if abs(market_adjustment) > 0.01:
+            evidence_list.append(self.bayesian_updater.create_evidence(
+                evidence_type=EvidenceType.MARKET_BEHAVIOR,
+                positive_signal=market_adjustment > 0,
+                strength=min(abs(market_adjustment) * 30, 1.0),  # Scale to 0-1
+                confidence=0.5,
+                description=f"Market factors: {market_reasoning}",
+                source="market_analysis"
+            ))
         
-        # Step 5: Combine all factors
-        final_probability = self._combine_factors(
-            base_prob, news_adjustment, time_adjustment, market_adjustment
-        )
+        # Use Bayesian updating to combine evidence
+        if evidence_list:
+            # Determine market type for proper evidence weighting
+            market_type = self._determine_market_type(market)
+            distribution = self.bayesian_updater.update_probability(
+                prior=base_prob,
+                evidence_list=evidence_list,
+                market_type=market_type
+            )
+            reasoning = self._generate_bayesian_reasoning(distribution, base_reasoning)
+        else:
+            # No evidence, just use base probability with uncertainty
+            distribution = self.bayesian_updater._create_distribution_from_point(base_prob, confidence=0.5)
+            reasoning = f"Base probability: {base_prob:.1%} ({base_reasoning}) | No additional evidence available"
         
-        # Ensure reasonable bounds
-        final_probability = max(0.02, min(0.98, final_probability))
-        
-        reasoning = self._generate_reasoning(
-            base_prob, base_reasoning, news_adjustment, news_reasoning,
-            time_adjustment, time_reasoning, market_adjustment, market_reasoning,
-            final_probability
-        )
-        
-        return final_probability, 1.0 - final_probability, reasoning
+        return distribution.mean, 1.0 - distribution.mean, reasoning
         
     def _get_base_probability(self, market: Market) -> Tuple[float, str]:
         """
