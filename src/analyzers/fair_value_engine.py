@@ -20,6 +20,7 @@ from src.analyzers.sports_model import SportsMarketModel
 from src.analyzers.entertainment_model import EntertainmentMarketModel
 from src.analyzers.weather_model import WeatherClimateModel
 from src.analyzers.technology_model import TechnologyMarketModel
+from src.analyzers.sanity_checker import SanityChecker
 
 logger = logging.getLogger(__name__)
 
@@ -53,6 +54,7 @@ class FairValueEngine:
         self.entertainment_model = EntertainmentMarketModel()
         self.weather_model = WeatherClimateModel()
         self.technology_model = TechnologyMarketModel()
+        self.sanity_checker = SanityChecker()
         
     async def calculate_fair_value(
         self, 
@@ -74,7 +76,7 @@ class FairValueEngine:
             try:
                 distribution = self.political_model.calculate_political_probability(market, news_articles)
                 reasoning = self._generate_bayesian_reasoning(distribution, "Advanced political model with polling/fundamentals")
-                return distribution.mean, 1.0 - distribution.mean, reasoning
+                return self._apply_sanity_checks(market, distribution.mean, 1.0 - distribution.mean, reasoning)
             except Exception as e:
                 logger.warning(f"Political model failed, falling back to standard approach: {e}")
         
@@ -83,7 +85,7 @@ class FairValueEngine:
             try:
                 distribution = self.crypto_model.calculate_crypto_probability(market, news_articles)
                 reasoning = self._generate_bayesian_reasoning(distribution, "Advanced crypto/financial model with market data")
-                return distribution.mean, 1.0 - distribution.mean, reasoning
+                return self._apply_sanity_checks(market, distribution.mean, 1.0 - distribution.mean, reasoning)
             except Exception as e:
                 logger.warning(f"Crypto model failed, falling back to standard approach: {e}")
         
@@ -92,7 +94,7 @@ class FairValueEngine:
             try:
                 distribution = self.sports_model.calculate_sports_probability(market, news_articles)
                 reasoning = self._generate_bayesian_reasoning(distribution, "Advanced sports model with performance data")
-                return distribution.mean, 1.0 - distribution.mean, reasoning
+                return self._apply_sanity_checks(market, distribution.mean, 1.0 - distribution.mean, reasoning)
             except Exception as e:
                 logger.warning(f"Sports model failed, falling back to standard approach: {e}")
         
@@ -101,7 +103,7 @@ class FairValueEngine:
             try:
                 distribution = self.entertainment_model.calculate_entertainment_probability(market, news_articles)
                 reasoning = self._generate_bayesian_reasoning(distribution, "Advanced entertainment model with industry data")
-                return distribution.mean, 1.0 - distribution.mean, reasoning
+                return self._apply_sanity_checks(market, distribution.mean, 1.0 - distribution.mean, reasoning)
             except Exception as e:
                 logger.warning(f"Entertainment model failed, falling back to standard approach: {e}")
         
@@ -110,7 +112,7 @@ class FairValueEngine:
             try:
                 distribution = self.weather_model.calculate_weather_probability(market, news_articles)
                 reasoning = self._generate_bayesian_reasoning(distribution, "Advanced weather/climate model with meteorological data")
-                return distribution.mean, 1.0 - distribution.mean, reasoning
+                return self._apply_sanity_checks(market, distribution.mean, 1.0 - distribution.mean, reasoning)
             except Exception as e:
                 logger.warning(f"Weather model failed, falling back to standard approach: {e}")
         
@@ -119,12 +121,53 @@ class FairValueEngine:
             try:
                 distribution = self.technology_model.calculate_technology_probability(market, news_articles)
                 reasoning = self._generate_bayesian_reasoning(distribution, "Advanced technology model with industry tracking")
-                return distribution.mean, 1.0 - distribution.mean, reasoning
+                return self._apply_sanity_checks(market, distribution.mean, 1.0 - distribution.mean, reasoning)
             except Exception as e:
                 logger.warning(f"Technology model failed, falling back to standard approach: {e}")
         
         # Use standard approach with Bayesian updating for other markets
-        return await self._calculate_standard_fair_value(market, news_articles)
+        yes_prob, no_prob, reasoning = await self._calculate_standard_fair_value(market, news_articles)
+        
+        # Apply sanity checking to the final result
+        return self._apply_sanity_checks(market, yes_prob, no_prob, reasoning)
+        
+    def _apply_sanity_checks(
+        self,
+        market: Market,
+        yes_prob: float,
+        no_prob: float,
+        reasoning: str
+    ) -> Tuple[float, float, str]:
+        """Apply sanity checks and adjust predictions if needed."""
+        # Extract confidence from reasoning if available
+        confidence = 0.8  # Default confidence
+        
+        # Run sanity checks
+        sanity_result = self.sanity_checker.check_prediction(
+            market=market,
+            predicted_probability=yes_prob,
+            confidence=confidence,
+            reasoning=reasoning
+        )
+        
+        # Adjust probability if needed
+        final_yes_prob = sanity_result.adjusted_probability or yes_prob
+        final_no_prob = 1.0 - final_yes_prob
+        
+        # Add warnings to reasoning if any
+        if sanity_result.warnings:
+            warning_text = self.sanity_checker.generate_recommendation_warning(sanity_result)
+            if warning_text:
+                reasoning = f"{reasoning}. {warning_text}"
+        
+        # Log significant adjustments
+        if sanity_result.adjusted_probability and abs(yes_prob - final_yes_prob) > 0.1:
+            logger.warning(
+                f"Sanity check adjusted probability for {market.question}: "
+                f"{yes_prob:.1%} -> {final_yes_prob:.1%}"
+            )
+        
+        return final_yes_prob, final_no_prob, reasoning
         
     async def _calculate_standard_fair_value(
         self, 
