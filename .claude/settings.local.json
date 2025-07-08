@@ -26,7 +26,9 @@
       "Bash(./venv_linux/bin/python -m pytest tests/test_sports_model.py::TestSportsMarketModel::test_identify_sport_nfl -v)",
       "Bash(./venv_linux/bin/python -m pytest tests/test_crypto_model.py -v)",
       "Bash(./venv_linux/bin/python -m pytest tests/test_llm_news_analyzer.py -v)",
-      "Bash(./venv_linux/bin/python -m pytest tests/test_sports_model.py tests/test_political_model.py -v --tb=short)"
+      "Bash(./venv_linux/bin/python -m pytest tests/test_sports_model.py tests/test_political_model.py -v --tb=short)",
+      "Bash(./venv_linux/bin/python -m pytest tests/test_bayesian_updater.py tests/test_sports_model.py tests/test_political_model.py tests/test_crypto_model.py tests/test_market_filters.py -v --tb=short)",
+      "Bash(./venv_linux/bin/python -m pytest tests/test_crypto_model.py::TestCryptoFinancialModel::test_identify_crypto_asset_bitcoin -v)"
     ],
     "deny": []
   }

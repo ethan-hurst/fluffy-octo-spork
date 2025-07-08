@@ -118,11 +118,9 @@ class TestCryptoFinancialModel:
                 volume_24h=28000000000.0,
                 price_change_7d=5.2,
                 price_change_30d=12.8,
-                rsi=58.0,
-                ma_50=62000.0,
-                ma_200=55000.0,
-                support_level=60000.0,
-                resistance_level=70000.0
+                volatility_30d=0.45,
+                all_time_high=69000.0,
+                distance_from_ath=0.058
             ),
             "ETH": CryptoMarketData(
                 symbol="ETH",
@@ -131,11 +129,9 @@ class TestCryptoFinancialModel:
                 volume_24h=15000000000.0,
                 price_change_7d=3.8,
                 price_change_30d=8.5,
-                rsi=62.0,
-                ma_50=3100.0,
-                ma_200=2800.0,
-                support_level=3000.0,
-                resistance_level=3500.0
+                volatility_30d=0.52,
+                all_time_high=4878.0,
+                distance_from_ath=0.344
             )
         }
         
