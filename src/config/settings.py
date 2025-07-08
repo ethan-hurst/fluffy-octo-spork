@@ -19,7 +19,7 @@ class Settings(BaseSettings):
     
     # Polymarket CLOB API
     polymarket_clob_api_url: str = Field(
-        default="https://clob.polymarket.com",
+        default="https://gamma-api.polymarket.com",
         description="Polymarket CLOB API base URL"
     )
     polymarket_api_key: Optional[str] = Field(
