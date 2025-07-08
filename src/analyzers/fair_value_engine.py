@@ -17,6 +17,8 @@ from src.analyzers.bayesian_updater import BayesianUpdater, Evidence, EvidenceTy
 from src.analyzers.political_model import PoliticalMarketModel
 from src.analyzers.crypto_model import CryptoFinancialModel
 from src.analyzers.sports_model import SportsMarketModel
+from src.analyzers.entertainment_model import EntertainmentMarketModel
+from src.analyzers.weather_model import WeatherClimateModel
 
 logger = logging.getLogger(__name__)
 
@@ -47,6 +49,8 @@ class FairValueEngine:
         self.political_model = PoliticalMarketModel()
         self.crypto_model = CryptoFinancialModel()
         self.sports_model = SportsMarketModel()
+        self.entertainment_model = EntertainmentMarketModel()
+        self.weather_model = WeatherClimateModel()
         
     async def calculate_fair_value(
         self, 
@@ -80,6 +84,33 @@ class FairValueEngine:
                 return distribution.mean, 1.0 - distribution.mean, reasoning
             except Exception as e:
                 logger.warning(f"Crypto model failed, falling back to standard approach: {e}")
+        
+        # Check if this is a sports market that can use advanced modeling
+        if self._is_sports_event(market):
+            try:
+                distribution = self.sports_model.calculate_sports_probability(market, news_articles)
+                reasoning = self._generate_bayesian_reasoning(distribution, "Advanced sports model with performance data")
+                return distribution.mean, 1.0 - distribution.mean, reasoning
+            except Exception as e:
+                logger.warning(f"Sports model failed, falling back to standard approach: {e}")
+        
+        # Check if this is an entertainment market that can use advanced modeling
+        if self._is_entertainment_event(market):
+            try:
+                distribution = self.entertainment_model.calculate_entertainment_probability(market, news_articles)
+                reasoning = self._generate_bayesian_reasoning(distribution, "Advanced entertainment model with industry data")
+                return distribution.mean, 1.0 - distribution.mean, reasoning
+            except Exception as e:
+                logger.warning(f"Entertainment model failed, falling back to standard approach: {e}")
+        
+        # Check if this is a weather/climate market that can use advanced modeling
+        if self._is_weather_climate_event(market):
+            try:
+                distribution = self.weather_model.calculate_weather_probability(market, news_articles)
+                reasoning = self._generate_bayesian_reasoning(distribution, "Advanced weather/climate model with meteorological data")
+                return distribution.mean, 1.0 - distribution.mean, reasoning
+            except Exception as e:
+                logger.warning(f"Weather model failed, falling back to standard approach: {e}")
         
         # Use standard approach with Bayesian updating for other markets
         return await self._calculate_standard_fair_value(market, news_articles)
@@ -160,6 +191,10 @@ class FairValueEngine:
             return "crypto"
         elif self._is_sports_event(market):
             return "sports"
+        elif self._is_entertainment_event(market):
+            return "entertainment"
+        elif self._is_weather_climate_event(market):
+            return "weather"
         else:
             return "general"
             
@@ -204,6 +239,14 @@ class FairValueEngine:
         # Sports Events
         if self._is_sports_event(market):
             return self._calculate_sports_probability(market)
+            
+        # Entertainment Events
+        if self._is_entertainment_event(market):
+            return self._calculate_entertainment_probability(market)
+            
+        # Weather/Climate Events
+        if self._is_weather_climate_event(market):
+            return self._calculate_weather_climate_probability(market)
             
         # Corporate/Business Events
         if self._is_corporate_event(market):
@@ -451,6 +494,80 @@ class FairValueEngine:
             return 0.30, "High-profile trades occur ~30% of the time when speculated"
             
         return 0.35, "Generic sports event baseline (35%)"
+        
+    def _is_entertainment_event(self, market: Market) -> bool:
+        """Check if this is an entertainment event."""
+        question = market.question.lower()
+        return any(term in question for term in [
+            "oscar", "emmy", "grammy", "golden globe", "award", "nomination",
+            "renewed", "cancelled", "canceled", "season", "tv show",
+            "box office", "movie", "film", "gross", "celebrity"
+        ])
+        
+    def _calculate_entertainment_probability(self, market: Market) -> Tuple[float, str]:
+        """Calculate probability for entertainment events."""
+        question = market.question.lower()
+        
+        # Awards shows
+        if any(term in question for term in ["oscar", "emmy", "grammy", "award"]):
+            # Awards are somewhat predictable with favorites
+            if "best picture" in question or "album of the year" in question:
+                return 0.20, "Major awards have ~20% favorite win rate"
+            else:
+                return 0.25, "Entertainment awards baseline (~25%)"
+                
+        # TV renewals
+        if any(term in question for term in ["renewed", "renewal", "another season"]):
+            return 0.60, "TV shows renewed ~60% of the time"
+            
+        # TV cancellations
+        if any(term in question for term in ["cancelled", "canceled", "ending"]):
+            return 0.40, "TV shows cancelled ~40% of the time"
+            
+        # Box office predictions
+        if any(term in question for term in ["box office", "gross", "$"]):
+            return 0.35, "Box office targets achieved ~35% of the time"
+            
+        # Celebrity events
+        if any(term in question for term in ["celebrity", "marry", "divorce", "dating"]):
+            return 0.20, "Celebrity predictions rarely accurate (~20%)"
+            
+        return 0.30, "Generic entertainment event baseline (30%)"
+        
+    def _is_weather_climate_event(self, market: Market) -> bool:
+        """Check if this is a weather/climate event."""
+        question = market.question.lower()
+        return any(term in question for term in [
+            "hurricane", "storm", "temperature", "rainfall", "snow", "drought",
+            "wildfire", "tornado", "weather", "climate", "degrees", "inches",
+            "global warming", "sea level", "ice", "record high", "record low"
+        ])
+        
+    def _calculate_weather_climate_probability(self, market: Market) -> Tuple[float, str]:
+        """Calculate probability for weather/climate events."""
+        question = market.question.lower()
+        
+        # Hurricane landfall
+        if any(term in question for term in ["hurricane", "tropical storm", "landfall"]):
+            return 0.25, "Hurricane landfall predictions ~25% accurate at long range"
+            
+        # Temperature records
+        if any(term in question for term in ["temperature record", "hottest", "coldest"]):
+            return 0.10, "Temperature records broken ~10% of the time"
+            
+        # Precipitation records
+        if any(term in question for term in ["rainfall", "snowfall", "precipitation"]):
+            return 0.15, "Precipitation records ~15% probability"
+            
+        # Wildfire seasons
+        if "wildfire" in question:
+            return 0.30, "Severe wildfire seasons ~30% probability"
+            
+        # Climate milestones
+        if any(term in question for term in ["climate", "global", "sea level"]):
+            return 0.40, "Climate milestones on current trajectories (~40%)"
+            
+        return 0.25, "Generic weather event baseline (25%)"
         
     def _is_corporate_event(self, market: Market) -> bool:
         """Check if this is a corporate/business event."""
