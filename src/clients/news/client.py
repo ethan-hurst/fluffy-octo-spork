@@ -142,15 +142,11 @@ class NewsClient:
         """
         from_date = datetime.now() - timedelta(hours=hours_back)
         
-        # Search for prediction market relevant topics
+        # Reduced queries to avoid rate limiting
         queries = [
             "election OR vote OR poll OR candidate OR president",
-            "cryptocurrency OR bitcoin OR crypto OR blockchain",
-            "stock market OR economy OR recession OR inflation",
-            "climate OR weather OR hurricane OR earthquake",
-            "sports championship OR tournament OR olympics",
-            "AI OR artificial intelligence OR technology",
-            "policy OR regulation OR law OR legislation"
+            "cryptocurrency OR bitcoin OR crypto OR economy", 
+            "AI OR technology OR policy OR regulation"
         ]
         
         all_articles = []
@@ -171,8 +167,8 @@ class NewsClient:
                 relevant_articles = response.relevant_articles
                 all_articles.extend(relevant_articles)
                 
-                # Small delay to respect rate limits
-                await asyncio.sleep(0.1)
+                # Longer delay to respect rate limits
+                await asyncio.sleep(1.0)
                 
             except Exception as e:
                 logger.error(f"Error fetching news for query '{query}': {e}")

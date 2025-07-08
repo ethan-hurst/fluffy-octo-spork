@@ -126,11 +126,11 @@ class MarketAnalyzer:
         yes_return = None
         no_return = None
         
-        if fair_yes_price > price.yes_price:
+        if fair_yes_price > price.yes_price and price.yes_price > 0:
             # YES is undervalued - potential profit from buying YES
             yes_return = (fair_yes_price - price.yes_price) / price.yes_price * 100
         
-        if fair_no_price > price.no_price:
+        if fair_no_price > price.no_price and price.no_price > 0:
             # NO is undervalued - potential profit from buying NO  
             no_return = (fair_no_price - price.no_price) / price.no_price * 100
             

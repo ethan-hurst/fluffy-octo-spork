@@ -3,12 +3,9 @@ Pydantic models for market analysis.
 """
 
 from datetime import datetime
-from typing import List, Optional, TYPE_CHECKING
+from typing import List, Optional, Any
 
 from pydantic import BaseModel, Field
-
-if TYPE_CHECKING:
-    from src.analyzers.kelly_criterion import KellyResult
 
 
 class OpportunityScore(BaseModel):
@@ -81,7 +78,7 @@ class MarketOpportunity(BaseModel):
     related_news: List[str] = Field(default_factory=list, description="Related news headlines")
     
     # Kelly Criterion (optional, calculated on demand)
-    kelly_analysis: Optional["KellyResult"] = Field(None, description="Kelly Criterion position sizing")
+    kelly_analysis: Optional[Any] = Field(None, description="Kelly Criterion position sizing")
     
     @property
     def profit_potential(self) -> float:
@@ -169,3 +166,8 @@ class AnalysisResult(BaseModel):
             opp for opp in self.opportunities 
             if opp.score.confidence_score >= 0.7
         ]
+
+
+# Rebuild models to fix forward references
+MarketOpportunity.model_rebuild()
+AnalysisResult.model_rebuild()
