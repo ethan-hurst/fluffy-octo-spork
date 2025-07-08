@@ -89,4 +89,20 @@
   - Data validation and model behavior
 
 ## Discovered During Work
-(To be added as implementation progresses)
+
+### 2025-07-08: API and Market Issues Resolved
+- ✅ **Issue**: Analyzer finding 0 opportunities despite analyzing markets
+  - **Root Cause**: Both Polymarket APIs returning historical markets marked as active but with past end dates
+  - **Solution**: Added timezone-aware date filtering to exclude expired markets
+  
+- ✅ **Issue**: Timezone handling errors ("can't subtract offset-naive and offset-aware datetimes")
+  - **Root Cause**: Mixed use of timezone-naive and timezone-aware datetime objects
+  - **Solution**: Updated all datetime operations to use UTC timezone consistently across 10+ files
+  
+- ✅ **Issue**: NewsAPI rate limiting (HTTP 429 errors)
+  - **Root Cause**: Free tier limits (100 requests/day) being exceeded
+  - **Solution**: 
+    - Adjusted rate limiter to 1 request per 2 seconds
+    - Added graceful error handling to return empty responses instead of crashing
+    - Implemented 15-minute caching to reduce API calls
+    - Added request batching and early exit on rate limit errors
