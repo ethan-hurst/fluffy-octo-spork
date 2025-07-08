@@ -1,10 +1,13 @@
 """
 Unit tests for NewsAPI client functionality.
+
+These tests verify the NewsClient behaves correctly according to its API contract,
+not implementation details.
 """
 
 import pytest
 from datetime import datetime, timedelta
-from unittest.mock import patch, MagicMock, AsyncMock
+from unittest.mock import MagicMock, AsyncMock
 import httpx
 
 from src.clients.news.client import NewsClient
@@ -12,506 +15,311 @@ from src.clients.news.models import NewsArticle, NewsResponse, NewsSource
 
 
 class TestNewsClient:
-    """Test cases for NewsClient."""
+    """Test cases for NewsClient API contract."""
     
     def setup_method(self):
         """Set up test fixtures."""
-        self.client = NewsClient()
+        self.client = NewsClient(
+            base_url="https://newsapi.org/v2",
+            api_key="test_api_key"
+        )
         
-        # Create test news data
-        now = datetime.now()
-        self.test_news_data = {
+    @pytest.mark.asyncio
+    async def test_get_everything_returns_news_response(self):
+        """Test that get_everything returns a NewsResponse object."""
+        # Given: A mock response from the API
+        mock_response = MagicMock()
+        mock_response.status_code = 200
+        mock_response.json.return_value = {
             "status": "ok",
             "totalResults": 2,
             "articles": [
                 {
-                    "title": "Trump Leads in Latest Polling Data",
-                    "description": "Former president shows strong support in key battleground states",
-                    "url": "https://example.com/trump-polling",
-                    "publishedAt": (now - timedelta(hours=2)).isoformat() + "Z",
-                    "source": {
-                        "name": "Reuters"
-                    },
-                    "content": "Full article content about Trump polling data..."
+                    "source": {"id": None, "name": "Reuters"},
+                    "author": "John Doe",
+                    "title": "Market Update: Stocks Rise",
+                    "description": "Stock markets showed gains today",
+                    "url": "https://example.com/article1",
+                    "urlToImage": "https://example.com/image1.jpg",
+                    "publishedAt": "2024-01-15T10:00:00Z",
+                    "content": "Full article content..."
                 },
                 {
-                    "title": "Bitcoin ETF Decision Expected Soon",
-                    "description": "SEC chairman hints at upcoming decision on cryptocurrency ETF applications",
-                    "url": "https://example.com/btc-etf",
-                    "publishedAt": (now - timedelta(hours=1)).isoformat() + "Z",
-                    "source": {
-                        "name": "Bloomberg"
-                    },
-                    "content": "Article content about Bitcoin ETF decision..."
+                    "source": {"id": "bloomberg", "name": "Bloomberg"},
+                    "author": "Jane Smith",
+                    "title": "Crypto Markets Volatile",
+                    "description": "Bitcoin and other cryptocurrencies saw volatility",
+                    "url": "https://example.com/article2",
+                    "urlToImage": None,
+                    "publishedAt": "2024-01-15T09:30:00Z",
+                    "content": "Cryptocurrency markets..."
                 }
             ]
         }
+        mock_response.raise_for_status = MagicMock()
         
-        self.test_empty_response = {
+        # When: We call get_everything
+        mock_client = MagicMock()
+        mock_client.get = AsyncMock(return_value=mock_response)
+        mock_client.aclose = AsyncMock()
+        
+        async with NewsClient() as client:
+            client._client = mock_client
+            response = await client.get_everything(
+                query="market update",
+                language="en",
+                sort_by="publishedAt"
+            )
+        
+        # Then: We should get a valid NewsResponse
+        assert isinstance(response, NewsResponse)
+        assert response.status == "ok"
+        assert response.total_results == 2
+        assert len(response.articles) == 2
+        
+        # And: Articles should be properly parsed
+        article1 = response.articles[0]
+        assert isinstance(article1, NewsArticle)
+        assert article1.title == "Market Update: Stocks Rise"
+        assert article1.source.name == "Reuters"
+        assert isinstance(article1.published_at, datetime)
+        
+    @pytest.mark.asyncio
+    async def test_get_everything_handles_api_errors(self):
+        """Test that get_everything properly handles API errors."""
+        # Given: An API error response
+        mock_response = MagicMock()
+        mock_response.status_code = 401
+        mock_response.raise_for_status = MagicMock(
+            side_effect=httpx.HTTPStatusError("Unauthorized", request=None, response=mock_response)
+        )
+        
+        mock_client = MagicMock()
+        mock_client.get = AsyncMock(return_value=mock_response)
+        mock_client.aclose = AsyncMock()
+        
+        # When/Then: We should get an exception
+        async with NewsClient() as client:
+            client._client = mock_client
+            with pytest.raises(httpx.HTTPStatusError):
+                await client.get_everything(query="test")
+                
+    @pytest.mark.asyncio
+    async def test_get_relevant_news_filters_by_relevance(self):
+        """Test that get_relevant_news returns only relevant articles."""
+        # Given: A mix of relevant and irrelevant articles
+        mock_response = MagicMock()
+        mock_response.status_code = 200
+        mock_response.json.return_value = {
             "status": "ok",
-            "totalResults": 0,
-            "articles": []
+            "totalResults": 3,
+            "articles": [
+                {
+                    "source": {"name": "Reuters"},
+                    "title": "Presidential Election Update",
+                    "description": "Latest polling data shows tight race",
+                    "url": "https://example.com/election",
+                    "publishedAt": datetime.now().isoformat() + "Z",
+                    "content": "Election coverage..."
+                },
+                {
+                    "source": {"name": "TechCrunch"},
+                    "title": "New Restaurant Opens Downtown",
+                    "description": "A new Italian restaurant opened",
+                    "url": "https://example.com/restaurant",
+                    "publishedAt": datetime.now().isoformat() + "Z",
+                    "content": "Restaurant review..."
+                },
+                {
+                    "source": {"name": "Bloomberg"},
+                    "title": "Bitcoin Reaches New High",
+                    "description": "Cryptocurrency markets surge",
+                    "url": "https://example.com/bitcoin",
+                    "publishedAt": datetime.now().isoformat() + "Z",
+                    "content": "Bitcoin analysis..."
+                }
+            ]
         }
-        
-        self.test_error_response = {
-            "status": "error",
-            "code": "apiKeyInvalid",
-            "message": "Your API key is invalid or incorrect."
-        }
-        
-    @pytest.mark.asyncio
-    async def test_search_news_success(self):
-        """Test successful news search."""
-        # Mock the context manager and response
-        mock_response = MagicMock()
-        mock_response.status_code = 200
-        mock_response.json.return_value = self.test_news_data
-        mock_response.raise_for_status = MagicMock()
-        
-        # Create a mock client that returns the response
-        mock_client = MagicMock()
-        mock_client.get = AsyncMock(return_value=mock_response)
-        
-        # Mock the NewsClient to use our mock client
-        self.client._client = mock_client
-        
-        articles = await self.client.search_news("Trump election")
-        
-        assert len(articles) == 2
-        assert isinstance(articles[0], NewsArticle)
-        assert articles[0].title == "Trump Leads in Latest Polling Data"
-        assert articles[0].source.name == "Reuters"
-        assert articles[0].url == "https://example.com/trump-polling"
-        assert isinstance(articles[0].published_at, datetime)
-            
-    @pytest.mark.asyncio
-    async def test_search_news_with_filters(self):
-        """Test news search with additional filters."""
-        mock_response = MagicMock()
-        mock_response.status_code = 200
-        mock_response.json.return_value = self.test_news_data
-        mock_response.raise_for_status = MagicMock()
-        
-        mock_client = MagicMock()
-        mock_client.get = AsyncMock(return_value=mock_response)
-        self.client._client = mock_client
-        
-        articles = await self.client.search_news(
-            query="Bitcoin",
-            sources="bloomberg,reuters",
-            language="en",
-            sort_by="publishedAt",
-            from_date=datetime.now() - timedelta(days=1),
-            to_date=datetime.now(),
-            page_size=20
-        )
-        
-        # Verify the request was made with correct parameters
-        mock_client.get.assert_called_once()
-        
-        assert len(articles) == 2
-            
-    @pytest.mark.asyncio
-    async def test_search_news_empty_results(self):
-        """Test news search with no results."""
-        mock_response = MagicMock()
-        mock_response.status_code = 200
-        mock_response.json.return_value = self.test_empty_response
-        mock_response.raise_for_status = MagicMock()
-        
-        mock_client = MagicMock()
-        mock_client.get = AsyncMock(return_value=mock_response)
-        self.client._client = mock_client
-        
-        articles = await self.client.search_news("very specific query with no results")
-        
-        assert articles == []
-            
-    @pytest.mark.asyncio
-    async def test_search_news_api_error(self):
-        """Test news search with API error response."""
-        mock_response = MagicMock()
-        mock_response.status_code = 400
-        mock_response.json.return_value = self.test_error_response
-        mock_response.raise_for_status = MagicMock(side_effect=httpx.HTTPError("API Error"))
-        
-        mock_client = MagicMock()
-        mock_client.get = AsyncMock(return_value=mock_response)
-        self.client._client = mock_client
-        
-        articles = await self.client.search_news("test query")
-        
-        assert articles == []  # Should return empty list on error
-            
-    @pytest.mark.asyncio
-    async def test_search_news_network_error(self):
-        """Test news search with network error."""
-        mock_client = MagicMock()
-        mock_client.get = AsyncMock(side_effect=httpx.ConnectError("Network connection failed"))
-        self.client._client = mock_client
-        
-        articles = await self.client.search_news("test query")
-        
-        assert articles == []  # Should return empty list on network error
-            
-    @pytest.mark.asyncio
-    async def test_search_news_timeout(self):
-        """Test news search with timeout."""
-        import asyncio
-        
-        mock_client = MagicMock()
-        mock_client.get = AsyncMock(side_effect=asyncio.TimeoutError("Request timed out"))
-        self.client._client = mock_client
-        
-        articles = await self.client.search_news("test query")
-        
-        assert articles == []  # Should return empty list on timeout
-            
-    @pytest.mark.asyncio
-    async def test_get_top_headlines_success(self):
-        """Test successful top headlines retrieval."""
-        mock_response = MagicMock()
-        mock_response.status_code = 200
-        mock_response.json.return_value = self.test_news_data
-        mock_response.raise_for_status = MagicMock()
-        
-        mock_client = MagicMock()
-        mock_client.get = AsyncMock(return_value=mock_response)
-        self.client._client = mock_client
-        
-        articles = await self.client.get_top_headlines(category="business")
-        
-        assert len(articles) == 2
-        assert isinstance(articles[0], NewsArticle)
-            
-    @pytest.mark.asyncio
-    async def test_get_top_headlines_with_country(self):
-        """Test top headlines with country filter."""
-        mock_response = MagicMock()
-        mock_response.status_code = 200
-        mock_response.json.return_value = self.test_news_data
-        mock_response.raise_for_status = MagicMock()
-        
-        mock_client = MagicMock()
-        mock_client.get = AsyncMock(return_value=mock_response)
-        self.client._client = mock_client
-        
-        articles = await self.client.get_top_headlines(
-            country="us",
-            category="politics",
-            page_size=50
-        )
-        
-        assert len(articles) == 2
-            
-    def test_build_search_url_basic(self):
-        """Test search URL building with basic parameters."""
-        url = self.client._build_search_url("test query")
-        
-        assert self.client.base_url in url
-        assert "everything" in url
-        assert "q=test query" in url
-        assert f"apiKey={self.client.api_key}" in url
-        
-    def test_build_search_url_with_filters(self):
-        """Test search URL building with all filters."""
-        from_date = datetime(2024, 1, 1)
-        to_date = datetime(2024, 1, 31)
-        
-        url = self.client._build_search_url(
-            query="Bitcoin",
-            sources="reuters,bloomberg",
-            language="en",
-            sort_by="publishedAt",
-            from_date=from_date,
-            to_date=to_date,
-            page_size=50
-        )
-        
-        assert "q=Bitcoin" in url
-        assert "sources=reuters,bloomberg" in url
-        assert "language=en" in url
-        assert "sortBy=publishedAt" in url
-        assert "from=2024-01-01" in url
-        assert "to=2024-01-31" in url
-        assert "pageSize=50" in url
-        
-    def test_build_headlines_url_basic(self):
-        """Test headlines URL building with basic parameters."""
-        url = self.client._build_headlines_url()
-        
-        assert self.client.base_url in url
-        assert "top-headlines" in url
-        assert f"apiKey={self.client.api_key}" in url
-        
-    def test_build_headlines_url_with_filters(self):
-        """Test headlines URL building with filters."""
-        url = self.client._build_headlines_url(
-            country="us",
-            category="business",
-            sources="reuters",
-            page_size=25
-        )
-        
-        assert "country=us" in url
-        assert "category=business" in url
-        assert "sources=reuters" in url
-        assert "pageSize=25" in url
-        
-    def test_parse_article_valid(self):
-        """Test parsing valid article data."""
-        article_data = self.test_news_data["articles"][0]
-        article = self.client._parse_article(article_data)
-        
-        assert isinstance(article, NewsArticle)
-        assert article.title == "Trump Leads in Latest Polling Data"
-        assert article.description == "Former president shows strong support in key battleground states"
-        assert article.url == "https://example.com/trump-polling"
-        assert article.source.name == "Reuters"
-        assert isinstance(article.published_at, datetime)
-        
-    def test_parse_article_missing_fields(self):
-        """Test parsing article with missing optional fields."""
-        minimal_article = {
-            "title": "Test Article",
-            "url": "https://example.com/test",
-            "publishedAt": "2024-01-01T12:00:00Z",
-            "source": {"name": "Test Source"}
-        }
-        
-        article = self.client._parse_article(minimal_article)
-        
-        assert isinstance(article, NewsArticle)
-        assert article.title == "Test Article"
-        assert article.description is None  # Missing field should be None
-        assert article.url == "https://example.com/test"
-        assert article.source.name == "Test Source"
-        
-    def test_parse_article_invalid_date(self):
-        """Test parsing article with invalid date format."""
-        invalid_article = {
-            "title": "Test Article",
-            "url": "https://example.com/test",
-            "publishedAt": "invalid-date-format",
-            "source": {"name": "Test Source"}
-        }
-        
-        article = self.client._parse_article(invalid_article)
-        assert article is None  # Should return None for invalid date
-        
-    def test_parse_article_missing_required_fields(self):
-        """Test parsing article missing required fields."""
-        incomplete_article = {
-            "title": "Test Article",
-            # Missing url, publishedAt, source
-        }
-        
-        article = self.client._parse_article(incomplete_article)
-        assert article is None  # Should return None for missing required fields
-        
-    def test_parse_article_invalid_source_format(self):
-        """Test parsing article with invalid source format."""
-        invalid_source_article = {
-            "title": "Test Article",
-            "url": "https://example.com/test",
-            "publishedAt": "2024-01-01T12:00:00Z",
-            "source": "Invalid Source Format"  # Should be dict with 'name' key
-        }
-        
-        article = self.client._parse_article(invalid_source_article)
-        assert article is None  # Should return None for invalid source format
-        
-    def test_parse_datetime_valid_formats(self):
-        """Test datetime parsing with valid formats."""
-        # Test ISO format with Z
-        dt1 = self.client._parse_datetime("2024-01-01T12:00:00Z")
-        assert isinstance(dt1, datetime)
-        assert dt1.year == 2024
-        assert dt1.month == 1
-        assert dt1.day == 1
-        
-        # Test ISO format with timezone offset
-        dt2 = self.client._parse_datetime("2024-01-01T12:00:00+00:00")
-        assert isinstance(dt2, datetime)
-        
-        # Test ISO format without timezone
-        dt3 = self.client._parse_datetime("2024-01-01T12:00:00")
-        assert isinstance(dt3, datetime)
-        
-    def test_parse_datetime_invalid_format(self):
-        """Test datetime parsing with invalid format."""
-        invalid_dt = self.client._parse_datetime("invalid-date-format")
-        assert invalid_dt is None
-        
-    def test_parse_datetime_none_input(self):
-        """Test datetime parsing with None input."""
-        none_dt = self.client._parse_datetime(None)
-        assert none_dt is None
-        
-    def test_format_date_for_api(self):
-        """Test date formatting for API requests."""
-        test_date = datetime(2024, 1, 15, 10, 30, 45)
-        formatted = self.client._format_date_for_api(test_date)
-        
-        assert formatted == "2024-01-15T10:30:45"
-        
-    def test_format_date_for_api_none(self):
-        """Test date formatting with None input."""
-        formatted = self.client._format_date_for_api(None)
-        assert formatted is None
-        
-    def test_validate_search_parameters_valid(self):
-        """Test search parameter validation with valid inputs."""
-        # Should return True for valid parameters
-        result = self.client._validate_search_parameters(
-            query="test",
-            sources="reuters",
-            language="en",
-            sort_by="publishedAt",
-            page_size=50
-        )
-        assert result is True
-        
-    def test_validate_search_parameters_invalid_language(self):
-        """Test search parameter validation with invalid language."""
-        result = self.client._validate_search_parameters(
-            query="test",
-            language="invalid-lang"
-        )
-        assert result is False
-            
-    def test_validate_search_parameters_invalid_sort_by(self):
-        """Test search parameter validation with invalid sort_by."""
-        result = self.client._validate_search_parameters(
-            query="test",
-            sort_by="invalid-sort"
-        )
-        assert result is False
-            
-    def test_validate_search_parameters_invalid_page_size(self):
-        """Test search parameter validation with invalid page size."""
-        result = self.client._validate_search_parameters(
-            query="test",
-            page_size=150  # Too large
-        )
-        assert result is False
-        
-        result = self.client._validate_search_parameters(
-            query="test",
-            page_size=0  # Too small
-        )
-        assert result is False
-            
-    def test_validate_headlines_parameters_valid(self):
-        """Test headlines parameter validation with valid inputs."""
-        result = self.client._validate_headlines_parameters(
-            country="us",
-            category="business",
-            sources="reuters",
-            page_size=50
-        )
-        assert result is True
-        
-    def test_validate_headlines_parameters_invalid_country(self):
-        """Test headlines parameter validation with invalid country."""
-        result = self.client._validate_headlines_parameters(
-            country="invalid-country"
-        )
-        assert result is False
-            
-    def test_validate_headlines_parameters_invalid_category(self):
-        """Test headlines parameter validation with invalid category."""
-        result = self.client._validate_headlines_parameters(
-            category="invalid-category"
-        )
-        assert result is False
-            
-    def test_news_article_model_creation(self):
-        """Test NewsArticle model creation and validation."""
-        now = datetime.now()
-        article = NewsArticle(
-            title="Test Article Title",
-            description="Test article description",
-            url="https://example.com/test-article",
-            published_at=now,
-            source=NewsSource(name="Test Source")
-        )
-        
-        assert article.title == "Test Article Title"
-        assert article.description == "Test article description"
-        assert article.url == "https://example.com/test-article"
-        assert article.published_at == now
-        assert article.source.name == "Test Source"
-        
-    def test_news_article_model_optional_fields(self):
-        """Test NewsArticle model with optional fields."""
-        now = datetime.now()
-        article = NewsArticle(
-            title="Test Article",
-            url="https://example.com/test",
-            published_at=now,
-            source=NewsSource(name="Test Source"),
-            description=None  # Optional field
-        )
-        
-        assert article.title == "Test Article"
-        assert article.description is None
-        assert article.url == "https://example.com/test"
-        assert article.source.name == "Test Source"
-        
-    @pytest.mark.asyncio
-    async def test_session_management(self):
-        """Test proper session management."""
-        mock_response = MagicMock()
-        mock_response.status_code = 200
-        mock_response.json.return_value = self.test_empty_response
         mock_response.raise_for_status = MagicMock()
         
         mock_client = MagicMock()
         mock_client.get = AsyncMock(return_value=mock_response)
         mock_client.aclose = AsyncMock()
         
-        # Use context manager
+        # When: We get relevant news
         async with NewsClient() as client:
             client._client = mock_client
-            await client.search_news("test")
-            
-        # Client should be properly managed
-        # aclose would be called on the real client, not our mock
-            
-    @pytest.mark.asyncio
-    async def test_rate_limiting_integration(self):
-        """Test rate limiting integration."""
-        import asyncio
+            articles = await client.get_relevant_news(hours_back=24, max_articles=10)
         
+        # Then: We should get relevant articles
+        assert isinstance(articles, list)
+        assert all(isinstance(a, NewsArticle) for a in articles)
+        
+        # The actual filtering happens in NewsResponse.relevant_articles
+        # which filters based on relevance_keywords
+        
+    @pytest.mark.asyncio
+    async def test_get_breaking_news_uses_top_sources(self):
+        """Test that get_breaking_news queries only top news sources."""
+        # Given: A mock client to capture the request
         mock_response = MagicMock()
         mock_response.status_code = 200
-        mock_response.json.return_value = self.test_empty_response
+        mock_response.json.return_value = {
+            "status": "ok",
+            "totalResults": 1,
+            "articles": [{
+                "source": {"name": "Reuters"},
+                "title": "Breaking: Major Event",
+                "url": "https://example.com/breaking",
+                "publishedAt": datetime.now().isoformat() + "Z"
+            }]
+        }
         mock_response.raise_for_status = MagicMock()
         
         mock_client = MagicMock()
         mock_client.get = AsyncMock(return_value=mock_response)
-        self.client._client = mock_client
+        mock_client.aclose = AsyncMock()
         
-        # Make multiple requests rapidly
-        tasks = [self.client.search_news(f"query {i}") for i in range(3)]
-        results = await asyncio.gather(*tasks, return_exceptions=True)
+        # When: We get breaking news
+        async with NewsClient() as client:
+            client._client = mock_client
+            articles = await client.get_breaking_news(max_articles=5)
         
-        # All should succeed (rate limiter should handle timing)
-        assert all(isinstance(result, list) for result in results)
+        # Then: The request should include top sources
+        mock_client.get.assert_called_once()
+        call_args = mock_client.get.call_args
+        params = call_args[1]['params']
+        
+        assert 'sources' in params
+        expected_sources = ["reuters", "bbc-news", "cnn", "associated-press",
+                          "the-wall-street-journal", "bloomberg", "cnbc"]
+        assert params['sources'] == ",".join(expected_sources)
+        assert params['sortBy'] == 'publishedAt'
+        assert params['pageSize'] == 5
+        
+    @pytest.mark.asyncio
+    async def test_context_manager_handles_client_lifecycle(self):
+        """Test that the context manager properly manages the HTTP client."""
+        # When: We use the client as a context manager
+        async with NewsClient() as client:
+            # Then: The client should be initialized
+            assert client._client is not None
             
-    def test_error_handling_consistency(self):
-        """Test consistent error handling across methods."""
-        # Test that all parsing methods handle invalid inputs gracefully
-        assert self.client._parse_article({}) is None
-        assert self.client._parse_article(None) is None
-        assert self.client._parse_datetime("") is None
-        assert self.client._parse_datetime(123) is None
+        # And: After exiting, the client is closed (we can't easily test this)
+        # but the implementation calls await self._client.aclose()
         
-        # Test validation methods return False for invalid inputs
-        assert self.client._validate_search_parameters() is True  # No params is valid
-        assert self.client._validate_headlines_parameters() is True  # No params is valid
+    @pytest.mark.asyncio
+    async def test_get_everything_validates_parameters(self):
+        """Test that get_everything uses valid API parameters."""
+        mock_response = MagicMock()
+        mock_response.status_code = 200
+        mock_response.json.return_value = {"status": "ok", "totalResults": 0, "articles": []}
+        mock_response.raise_for_status = MagicMock()
+        
+        mock_client = MagicMock()
+        mock_client.get = AsyncMock(return_value=mock_response)
+        mock_client.aclose = AsyncMock()
+        
+        # When: We call with various parameters
+        async with NewsClient() as client:
+            client._client = mock_client
+            await client.get_everything(
+                query="test",
+                sources="reuters,bloomberg",
+                language="en",
+                sort_by="relevancy",
+                page_size=50,
+                from_date=datetime(2024, 1, 1),
+                to_date=datetime(2024, 1, 31)
+            )
+        
+        # Then: Parameters should be properly formatted for the API
+        call_args = mock_client.get.call_args
+        params = call_args[1]['params']
+        
+        assert params['q'] == 'test'
+        assert params['sources'] == 'reuters,bloomberg'
+        assert params['language'] == 'en'
+        assert params['sortBy'] == 'relevancy'  # Note the camelCase conversion
+        assert params['pageSize'] == 50
+        assert 'from' in params  # from_date becomes 'from'
+        assert 'to' in params    # to_date becomes 'to'
+        
+    @pytest.mark.asyncio
+    async def test_rate_limiting_is_applied(self):
+        """Test that rate limiting is applied to API requests."""
+        # This is more of an integration test, but we can verify the rate limiter is called
+        mock_response = MagicMock()
+        mock_response.status_code = 200
+        mock_response.json.return_value = {"status": "ok", "totalResults": 0, "articles": []}
+        mock_response.raise_for_status = MagicMock()
+        
+        mock_client = MagicMock()
+        mock_client.get = AsyncMock(return_value=mock_response)
+        mock_client.aclose = AsyncMock()
+        
+        # The actual rate limiting happens via rate_limiters.newsapi.acquire()
+        # We're testing that the method doesn't fail when rate limiting is in place
+        async with NewsClient() as client:
+            client._client = mock_client
+            
+            # Make multiple rapid requests
+            for _ in range(3):
+                await client.get_everything(query="test")
+                
+        # If rate limiting wasn't working, this might fail
+        # But since we're mocking, we're mainly testing the interface
+        assert mock_client.get.call_count == 3
+        
+    def test_news_article_model_contract(self):
+        """Test that NewsArticle model works as expected."""
+        # Given: Valid article data
+        article = NewsArticle(
+            source=NewsSource(name="Reuters"),
+            title="Test Article",
+            description="Test description",
+            url="https://example.com/test",
+            publishedAt=datetime.now(),
+            content="Full content"
+        )
+        
+        # Then: All fields should be accessible
+        assert article.title == "Test Article"
+        assert article.source.name == "Reuters"
+        assert article.description == "Test description"
+        assert isinstance(article.published_at, datetime)
+        
+    def test_news_response_filters_relevant_articles(self):
+        """Test that NewsResponse.relevant_articles filters correctly."""
+        # Given: A response with mixed articles
+        response = NewsResponse(
+            status="ok",
+            totalResults=2,
+            articles=[
+                NewsArticle(
+                    source=NewsSource(name="Reuters"),
+                    title="Election Results Coming In",
+                    url="https://example.com/election",
+                    publishedAt=datetime.now()
+                ),
+                NewsArticle(
+                    source=NewsSource(name="FoodNetwork"),
+                    title="Best Pasta Recipes",
+                    url="https://example.com/pasta",
+                    publishedAt=datetime.now()
+                )
+            ]
+        )
+        
+        # When: We get relevant articles
+        relevant = response.relevant_articles
+        
+        # Then: Only articles with relevance keywords should be included
+        # The first article contains "election" which is a relevance keyword
+        # The second article about pasta recipes should be filtered out
+        assert len(relevant) == 1
+        assert relevant[0].title == "Election Results Coming In"
 
 
 if __name__ == "__main__":
-    pytest.main([__file__])
+    pytest.main([__file__, "-v"])

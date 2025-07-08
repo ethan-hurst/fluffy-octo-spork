@@ -179,8 +179,8 @@ class TestSportsMarketModel:
         """Test player name extraction."""
         market = self.markets["player_retirement"]
         player = self.model._extract_player_name(market.question)
-        # The regex extracts "Bron James" due to the capital B in LeBron
-        assert player == "Bron James"
+        # Should correctly extract "LeBron James"
+        assert player == "LeBron James"
         
     def test_calculate_coaching_change_base_probability(self):
         """Test coaching change base probability calculation."""

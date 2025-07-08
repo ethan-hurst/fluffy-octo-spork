@@ -57,3 +57,9 @@
 - **Never hallucinate libraries or functions** – only use known, verified Python packages.
 - **Always confirm file paths and module names** exist before referencing them in code or tests.
 - **Never delete or overwrite existing code** unless explicitly instructed to or if part of a task from `TASK.md`.
+
+### Test Behaviour Rules 
+- Tests should define the contract - what the code should do
+- Implementation should satisfy the tests - not the other way around
+- Test the public API - not internal helper methods
+- Fix bugs in implementation - don't update tests to accept bugs

@@ -393,11 +393,12 @@ class SportsMarketModel:
         
     def _extract_player_name(self, question: str) -> Optional[str]:
         """Extract player name from market question."""
-        # Common player name patterns
+        # Common player name patterns - fixed to handle names like "LeBron James"
         player_patterns = [
-            r"will ([A-Z][a-z]+ [A-Z][a-z]+)",
-            r"([A-Z][a-z]+ [A-Z][a-z]+) retire",
-            r"([A-Z][a-z]+ [A-Z][a-z]+) will"
+            r"will ([A-Z][a-zA-Z]+ [A-Z][a-zA-Z]+)",  # Matches "LeBron James"
+            r"([A-Z][a-zA-Z]+ [A-Z][a-zA-Z]+) retire",
+            r"([A-Z][a-zA-Z]+ [A-Z][a-zA-Z]+) will",
+            r"([A-Z][a-zA-Z]+ [A-Z][a-zA-Z]+) to",  # "LeBron James to win"
         ]
         
         for pattern in player_patterns:
