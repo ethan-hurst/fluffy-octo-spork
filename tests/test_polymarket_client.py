@@ -9,7 +9,7 @@ import aiohttp
 import json
 
 from src.clients.polymarket.client import PolymarketClient
-from src.clients.polymarket.models import Market, OrderBook, Order, OrderSide, MarketStats
+from src.clients.polymarket.models import Market, Token, MarketPrice, MarketsResponse
 
 
 class TestPolymarketClient:

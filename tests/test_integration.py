@@ -10,10 +10,10 @@ from src.analyzers.market_analyzer import MarketAnalyzer
 from src.analyzers.fair_value_engine import FairValueEngine
 from src.clients.polymarket.client import PolymarketClient
 from src.clients.news.client import NewsClient
-from src.clients.polymarket.models import Market, OrderBook, Order, OrderSide, MarketStats
+from src.clients.polymarket.models import Market, Token, MarketPrice
 from src.clients.news.models import NewsArticle
 from src.analyzers.bayesian_updater import ProbabilityDistribution
-from src.analyzers.llm_news_analyzer import NewsAnalysis
+from src.analyzers.llm_news_analyzer import MarketNewsAnalysis
 
 
 class TestSystemIntegration:
