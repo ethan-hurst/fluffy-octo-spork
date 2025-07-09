@@ -18,8 +18,8 @@ class FlexibleAnalyzer:
     """
     
     def __init__(self):
-        self.min_edge = 0.08  # Lower threshold
-        self.min_volume = 5000  # Lower volume requirement
+        self.min_edge = 0.05  # Lower threshold to 5%
+        self.min_volume = 1000  # Lower volume requirement to $1k
         
     def analyze_market(
         self,
@@ -37,6 +37,10 @@ class FlexibleAnalyzer:
             self._check_medium_term_stability(market, price),
             self._check_high_confidence_events(market, price),
             self._check_binary_mispricing(market, price),
+            self._check_overpriced_moderate_events(market, price),
+            self._check_underpriced_high_probability(market, price),
+            self._check_time_sensitive_opportunities(market, price),
+            self._check_categorical_mispricings(market, price),
         ]
         
         # Return best opportunity
@@ -72,7 +76,11 @@ class FlexibleAnalyzer:
                 'world record', 'unanimous', 'sweep all',
                 'perfect season', '100% accuracy', 'hottest year',
                 'coldest year', 'most ever', 'least ever',
-                'highest ever', 'lowest ever', 'record-breaking'
+                'highest ever', 'lowest ever', 'record-breaking',
+                'win every', 'lose every', 'zero', 'nobody',
+                'everyone', 'all countries', 'every state',
+                '100 million', '1 billion', 'trillion',
+                'double', 'triple', 'quadruple'
             ]):
                 edge = price.yes_price - 0.02  # Assume 2% fair value
                 return SimpleOpportunity(
@@ -189,6 +197,150 @@ class FlexibleAnalyzer:
                     pattern_type="BINARY_MISPRICING"
                 )
                 
+        return None
+    
+    def _check_overpriced_moderate_events(
+        self,
+        market: Market,
+        price: MarketPrice
+    ) -> Optional[SimpleOpportunity]:
+        """Check for overpriced moderate probability events."""
+        
+        # Markets priced 10-25% that might be overpriced
+        if 0.10 < price.yes_price < 0.25:
+            question = market.question.lower()
+            
+            # Unlikely patterns in this range
+            if any(pattern in question for pattern in [
+                'impeach', 'resign', 'quit', 'step down', 'fired',
+                'collapse', 'crash', 'default', 'bankrupt',
+                'war', 'attack', 'terrorist', 'pandemic',
+                'revolution', 'overthrow', 'coup',
+                'death', 'die', 'assassin'
+            ]):
+                edge = price.yes_price - 0.05  # These are usually ~5%
+                if edge >= self.min_edge:
+                    return SimpleOpportunity(
+                        market=market,
+                        current_price=price.yes_price,
+                        recommended_action="BUY_NO",
+                        edge=edge,
+                        confidence=0.75,
+                        reason=f"Dramatic event overpriced at {price.yes_price:.0%}",
+                        pattern_type="OVERPRICED_MODERATE"
+                    )
+                    
+        return None
+    
+    def _check_underpriced_high_probability(
+        self,
+        market: Market,
+        price: MarketPrice
+    ) -> Optional[SimpleOpportunity]:
+        """Check for underpriced high probability events."""
+        
+        if 0.60 < price.yes_price < 0.80:
+            question = market.question.lower()
+            
+            # High probability patterns
+            if any(pattern in question for pattern in [
+                'will the sun rise', 'will continue to exist',
+                'at least one', 'at least 1', 'any',
+                'more than zero', 'more than 0',
+                'less than 100%', 'less than 100 percent',
+                'between', 'range'
+            ]):
+                edge = 0.95 - price.yes_price
+                if edge >= self.min_edge:
+                    return SimpleOpportunity(
+                        market=market,
+                        current_price=price.yes_price,
+                        recommended_action="BUY_YES",
+                        edge=edge,
+                        confidence=0.85,
+                        reason=f"Near certainty underpriced at {price.yes_price:.0%}",
+                        pattern_type="UNDERPRICED_HIGH"
+                    )
+                    
+        return None
+    
+    def _check_time_sensitive_opportunities(
+        self,
+        market: Market,
+        price: MarketPrice
+    ) -> Optional[SimpleOpportunity]:
+        """Check for time-sensitive opportunities."""
+        
+        if not market.end_date_iso:
+            return None
+            
+        days_left = (market.end_date_iso - datetime.now(timezone.utc)).days
+        
+        # Very short term (< 7 days) - status quo likely
+        if days_left < 7 and days_left > 0:
+            if 0.15 < price.yes_price < 0.40:
+                question = market.question.lower()
+                if any(pattern in question for pattern in [
+                    'announce', 'release', 'launch', 'debut',
+                    'happen', 'occur', 'take place'
+                ]):
+                    edge = price.yes_price - 0.10  # Unlikely in very short term
+                    if edge >= self.min_edge:
+                        return SimpleOpportunity(
+                            market=market,
+                            current_price=price.yes_price,
+                            recommended_action="BUY_NO",
+                            edge=edge,
+                            confidence=0.70,
+                            reason=f"Unlikely in {days_left} days",
+                            pattern_type="TIME_SENSITIVE"
+                        )
+                        
+        return None
+    
+    def _check_categorical_mispricings(
+        self,
+        market: Market,
+        price: MarketPrice
+    ) -> Optional[SimpleOpportunity]:
+        """Check for category-specific mispricings."""
+        
+        question = market.question.lower()
+        
+        # Crypto/Bitcoin specific patterns
+        if 'bitcoin' in question or 'btc' in question:
+            if 'reach' in question and '$' in question:
+                # Extract price target
+                if '200,000' in question or '200k' in question:
+                    if price.yes_price > 0.20:
+                        edge = price.yes_price - 0.15
+                        if edge >= self.min_edge:
+                            return SimpleOpportunity(
+                                market=market,
+                                current_price=price.yes_price,
+                                recommended_action="BUY_NO",
+                                edge=edge,
+                                confidence=0.70,
+                                reason="BTC $200k unlikely in timeframe",
+                                pattern_type="CRYPTO_OVERPRICED"
+                            )
+                            
+        # Sports patterns
+        elif any(sport in question for sport in ['nfl', 'nba', 'championship', 'super bowl']):
+            if 'undefeated' in question or 'perfect season' in question:
+                if price.yes_price > 0.05:
+                    edge = price.yes_price - 0.02
+                    if edge >= self.min_edge:
+                        return SimpleOpportunity(
+                            market=market,
+                            current_price=price.yes_price,
+                            recommended_action="BUY_NO",
+                            edge=edge,
+                            confidence=0.85,
+                            reason="Perfect seasons extremely rare",
+                            pattern_type="SPORTS_LONGSHOT"
+                        )
+                        
         return None
     
     def calculate_fair_value(

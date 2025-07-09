@@ -26,6 +26,7 @@ A sophisticated console application that analyzes Polymarket prediction markets 
 - **Rich Display**: Beautiful tables and formatted output using Rich library
 - **Real-time Analysis**: Run market analysis on demand
 - **Detailed Views**: Drill down into specific opportunities for detailed analysis
+- **Market Research**: Research any Polymarket URL for evidence-based trading recommendations
 - **Command-line Interface**: Simple commands for all functionality
 
 ## Installation
@@ -75,16 +76,28 @@ A sophisticated console application that analyzes Polymarket prediction markets 
 # Activate virtual environment
 source venv_linux/bin/activate
 
-# Run the application
+# Run interactive console
 python main.py
+
+# Or research a specific market directly
+python main.py research https://polymarket.com/event/bitcoin-150k-2025
+
+# Show help
+python main.py --help
 ```
 
 ### Available Commands
 
-#### Analysis Commands
-- `analyze` - Run complete market analysis
+#### Command Line Usage
+- `python main.py` - Start interactive console
+- `python main.py research <url>` - Research a specific Polymarket URL
+- `python main.py --help` - Show help message
+
+#### Interactive Console Commands
+- `start` - Run complete market analysis
 - `top` - Show top opportunities from last analysis
 - `details <id>` - Show detailed analysis for specific opportunity
+- `research <url>` - Research a specific Polymarket URL
 - `refresh` - Clear cache and run fresh analysis
 
 #### Tracking Commands
@@ -109,17 +122,22 @@ python main.py
    > top
    ```
 
-3. **Get details on specific opportunity**
+3. **Research a specific market**
+   ```
+   > research https://polymarket.com/event/bitcoin-150k-2025
+   ```
+
+4. **Get details on specific opportunity**
    ```
    > details 1
    ```
 
-4. **Check prediction performance**
+5. **Check prediction performance**
    ```
    > metrics
    ```
 
-5. **Export prediction history**
+6. **Export prediction history**
    ```
    > export my_predictions.csv
    ```

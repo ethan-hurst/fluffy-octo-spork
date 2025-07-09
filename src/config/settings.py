@@ -63,15 +63,15 @@ class Settings(BaseSettings):
     
     # Analysis Configuration
     min_market_volume: float = Field(
-        default=1000.0,
+        default=500.0,
         description="Minimum market volume to consider"
     )
     min_probability_spread: float = Field(
-        default=0.05,  # Lowered from 0.1 to 0.05 (5%)
+        default=0.04,  # Lowered to 4% for more opportunities
         description="Minimum probability spread for opportunities"
     )
     max_markets_to_analyze: int = Field(
-        default=100,
+        default=200,
         description="Maximum number of markets to analyze"
     )
     

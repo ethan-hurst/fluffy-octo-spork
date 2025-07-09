@@ -278,9 +278,12 @@ class DisplayManager:
 [green]top[/green]                  - Show top opportunities  
 [green]details <id>[/green]         - Show opportunity details
 [green]chat <id>[/green]            - Interactive chat about a specific market
+[green]research <url>[/green]       - Research a specific Polymarket URL
 [green]refresh[/green]              - Refresh data and re-analyze
 
 [bold yellow]Market Filter Commands:[/bold yellow]
+[green]high_confidence[/green]      - Only show high confidence opportunities (70%+)
+[green]all_confidence[/green]       - Show all confidence levels (default)
 [green]closing_soon[/green]         - Markets closing ≤30 days
 [green]medium_term[/green]          - Markets closing 30-90 days
 [green]long_term[/green]            - Markets closing >90 days

@@ -5,11 +5,13 @@ Main console application for Polymarket analyzer.
 import asyncio
 import logging
 import sys
-from typing import List, Optional
+from datetime import datetime, timezone
+from typing import List, Optional, Dict
 
 from src.analyzers.market_analyzer import MarketAnalyzer
 from src.analyzers.models import AnalysisResult
 from src.analyzers.news_correlator import NewsCorrelator
+from src.analyzers.market_researcher import MarketResearcher
 from src.clients.news.client import NewsClient
 from src.clients.polymarket.client import PolymarketClient
 from src.config.settings import settings
@@ -32,8 +34,10 @@ class PolymarketAnalyzerApp:
         self.display = DisplayManager()
         self.market_analyzer = MarketAnalyzer()
         self.news_correlator = NewsCorrelator()
+        self.market_researcher = MarketResearcher()
         self.last_analysis: Optional[AnalysisResult] = None
         self.auto_reload_enabled = False
+        self.high_confidence_only = False
         self._setup_logging()
         
     def _setup_logging(self) -> None:
@@ -137,6 +141,14 @@ class PolymarketAnalyzerApp:
             self._open_market_link(args[0])
         elif cmd == "chat" and args:
             await self._start_market_chat(args[0])
+        elif cmd == "research":
+            if args:
+                # Join args in case URL has spaces
+                url = ' '.join(args)
+                await self._research_market(url)
+            else:
+                self.display.print_error("Please provide a Polymarket URL")
+                self.display.print_info("Usage: research <polymarket-url>")
         elif cmd == "filter":
             self._show_filter_commands(args)
         elif cmd == "filters":
@@ -149,6 +161,10 @@ class PolymarketAnalyzerApp:
             self._set_time_filter("long_term")
         elif cmd == "all_time":
             self._set_time_filter(None)
+        elif cmd == "high_confidence":
+            self._set_confidence_filter(True)
+        elif cmd == "all_confidence":
+            self._set_confidence_filter(False)
         elif cmd == "restart":
             await self._restart_application()
         elif cmd == "reload":
@@ -205,9 +221,21 @@ class PolymarketAnalyzerApp:
                     
                 # Run analysis
                 progress.update(task, description="Analyzing opportunities...")
+                
+                # Use high confidence analyzer if filter is active
+                if self.high_confidence_only:
+                    from src.analyzers.high_confidence_analyzer import HighConfidenceAnalyzer
+                    # Temporarily replace the analyzer
+                    original_analyzer = self.market_analyzer.pattern_analyzer
+                    self.market_analyzer.pattern_analyzer = HighConfidenceAnalyzer()
+                    
                 self.last_analysis = await self.market_analyzer.analyze_markets(
                     markets, market_prices, news_articles
                 )
+                
+                # Restore original analyzer if needed
+                if self.high_confidence_only:
+                    self.market_analyzer.pattern_analyzer = original_analyzer
                 
                 progress.update(task, description="Analysis complete!", completed=100)
                 
@@ -530,6 +558,101 @@ class PolymarketAnalyzerApp:
             
         # Start chat session
         start_market_chat(opportunity)
+    
+    async def _research_market(self, url: str) -> None:
+        """
+        Research a specific Polymarket URL.
+        
+        Args:
+            url: Polymarket URL to research
+        """
+        self.display.print_info(f"🔍 Researching market: {url}")
+        
+        try:
+            # Research the market
+            result = await self.market_researcher.research_market(url)
+            
+            if 'error' in result:
+                self.display.print_error(result['error'])
+                return
+            
+            # Display research report
+            self._display_research_report(result)
+            
+        except Exception as e:
+            self.display.print_error(f"Research failed: {e}")
+            logger.exception("Error researching market")
+    
+    def _display_research_report(self, report: Dict) -> None:
+        """Display formatted research report."""
+        market = report['market']
+        price = report['price']
+        patterns = report['patterns']
+        rec = report['recommendation']
+        
+        # Header
+        self.display.console.print("\n[bold cyan]" + "="*80 + "[/bold cyan]")
+        self.display.console.print("[bold white]📈 MARKET RESEARCH REPORT[/bold white]")
+        self.display.console.print("[bold cyan]" + "="*80 + "[/bold cyan]\n")
+        
+        # Market info
+        self.display.console.print(f"[bold]📌 Market:[/bold] {market.question}")
+        self.display.console.print(f"[bold]💰 Volume:[/bold] ${market.volume:,.0f}")
+        self.display.console.print(f"[bold]📊 Current Price:[/bold] YES={price.yes_price:.1%} | NO={price.no_price:.1%}")
+        
+        # Time analysis
+        if market.end_date_iso:
+            days_left = (market.end_date_iso - datetime.now(timezone.utc)).days
+            self.display.console.print(f"[bold]⏰ Time Left:[/bold] {days_left} days")
+        
+        # Pattern analysis
+        if patterns:
+            self.display.console.print("\n[bold yellow]📋 Pattern Analysis:[/bold yellow]")
+            for pattern in patterns[:5]:  # Show top 5 patterns
+                self.display.console.print(f"  • {pattern['type']}: {pattern.get('keyword', pattern.get('target', ''))} ")
+                self.display.console.print(f"    Typical: {pattern['typical_probability']:.0%} vs Current: {pattern['current_price']:.0%}")
+        
+        # Recommendation
+        self.display.console.print("\n[bold cyan]" + "="*60 + "[/bold cyan]")
+        self.display.console.print("[bold white]🎯 RECOMMENDATION[/bold white]")
+        self.display.console.print("[bold cyan]" + "="*60 + "[/bold cyan]\n")
+        
+        if rec['position'] != 'NONE':
+            # Recommendation details
+            self.display.console.print(f"[bold green]✅ Position: BUY {rec['position']}[/bold green]")
+            self.display.console.print(f"[bold]📊 Confidence:[/bold] {rec['confidence']:.0%}")
+            self.display.console.print(f"[bold]💹 Expected Edge:[/bold] {rec['edge']:.1%}")
+            
+            # Reasons
+            if rec['reasons']:
+                self.display.console.print("\n[bold]📝 Analysis:[/bold]")
+                for reason in rec['reasons']:
+                    self.display.console.print(f"  • {reason}")
+            
+            # Trading suggestion
+            if rec['position'] == 'YES':
+                entry_price = price.yes_price
+            else:
+                entry_price = price.no_price
+            
+            target_price = min(0.95, entry_price + rec['edge'])
+            potential_return = (target_price / entry_price - 1) * 100
+            
+            self.display.console.print(f"\n[bold]💸 Trading Suggestion:[/bold]")
+            self.display.console.print(f"  Entry: {rec['position']} at {entry_price:.1%}")
+            self.display.console.print(f"  Target: {target_price:.1%}")
+            self.display.console.print(f"  Potential Return: {potential_return:.0f}%")
+            
+            # Score breakdown
+            if 'score_yes' in rec and 'score_no' in rec:
+                self.display.console.print(f"\n[bold]🏆 Score Breakdown:[/bold]")
+                self.display.console.print(f"  YES Score: {rec['score_yes']:.1f}")
+                self.display.console.print(f"  NO Score: {rec['score_no']:.1f}")
+        else:
+            self.display.console.print("[yellow]⚖️ No Clear Edge[/yellow]")
+            self.display.console.print("The market appears fairly priced at current levels.")
+        
+        self.display.console.print("\n[bold cyan]" + "="*80 + "[/bold cyan]\n")
         
     def _show_filter_commands(self, args: List[str]) -> None:
         """
@@ -542,13 +665,17 @@ class PolymarketAnalyzerApp:
             filter_help = """
 [bold cyan]Market Filter Commands:[/bold cyan]
 
-[bold yellow]Quick Time Filters:[/bold yellow]
+[bold yellow]Quick Time Filters (standalone commands):[/bold yellow]
 [green]closing_soon[/green]     - Markets closing ≤30 days
 [green]medium_term[/green]      - Markets closing 30-90 days  
 [green]long_term[/green]        - Markets closing >90 days
 [green]all_time[/green]         - Remove time filter
 
-[bold yellow]Advanced Filters:[/bold yellow]
+[bold yellow]Confidence Filters (standalone commands):[/bold yellow]
+[green]high_confidence[/green]  - Only show high confidence opportunities (70%+)
+[green]all_confidence[/green]   - Show all confidence levels (default)
+
+[bold yellow]Advanced Filters (use with 'filter' prefix):[/bold yellow]
 [green]filter categories politics,crypto[/green]    - Filter by categories
 [green]filter keywords trump,bitcoin[/green]        - Filter by keywords
 [green]filter max_days 30[/green]                   - Max days to resolution
@@ -559,6 +686,7 @@ class PolymarketAnalyzerApp:
 [green]filters[/green]          - Show active filters
 
 [dim]Examples:[/dim]
+[dim]  high_confidence                 # Enable high confidence filter[/dim]
 [dim]  closing_soon                    # Quick filter for urgent markets[/dim]
 [dim]  filter categories politics      # Only political markets[/dim]  
 [dim]  filter keywords trump,election  # Only Trump or election markets[/dim]
@@ -671,6 +799,22 @@ class PolymarketAnalyzerApp:
         self.display.print_success(f"Minimum days filter set to: {days}")
         self.display.print_info("Run 'start' to apply new filters")
         
+    def _set_confidence_filter(self, high_confidence_only: bool) -> None:
+        """
+        Set high confidence filter.
+        
+        Args:
+            high_confidence_only: Whether to show only high confidence opportunities
+        """
+        # Store the preference
+        self.high_confidence_only = high_confidence_only
+        
+        if high_confidence_only:
+            self.display.print_success("High confidence filter activated - will use specialized analyzer")
+        else:
+            self.display.print_success("All confidence levels enabled")
+        self.display.print_info("Run 'start' to apply new filter.")
+        
     def _clear_all_filters(self) -> None:
         """Clear all active filters."""
         from src.utils.market_filters import market_filter
@@ -714,42 +858,83 @@ class PolymarketAnalyzerApp:
         import importlib
         import sys
         
-        modules_to_reload = [
-            'src.analyzers.market_analyzer',
-            'src.analyzers.models', 
-            'src.analyzers.news_correlator',
-            'src.clients.news.client',
-            'src.clients.news.models',
-            'src.clients.polymarket.client',
-            'src.clients.polymarket.models',
-            'src.config.settings',
-            'src.console.display',
-            'src.console.chat',
-            'src.utils.cache',
-            'src.utils.rate_limiter',
-            'src.utils.prediction_tracker',
-            'src.utils.market_filters'
-        ]
-        
-        reloaded_count = 0
-        for module_name in modules_to_reload:
-            try:
-                if module_name in sys.modules:
-                    importlib.reload(sys.modules[module_name])
-                    reloaded_count += 1
-            except Exception as e:
-                self.display.print_warning(f"Failed to reload {module_name}: {e}")
+        try:
+            # Try to use enhanced reloader if available
+            from src.utils.module_reloader import ModuleReloader
+            
+            packages_to_reload = [
+                'src.analyzers',
+                'src.clients',
+                'src.config',
+                'src.console',
+                'src.utils'
+            ]
+            
+            # Deep reload all packages
+            reloaded_count = ModuleReloader.deep_reload(packages_to_reload)
+            
+            # Clear caches
+            ModuleReloader.clear_instance_caches()
+            
+        except ImportError:
+            # Fallback to basic reloading
+            modules_to_reload = [
+                'src.analyzers.market_analyzer',
+                'src.analyzers.models', 
+                'src.analyzers.news_correlator',
+                'src.analyzers.market_researcher',
+                'src.analyzers.high_confidence_analyzer',
+                'src.analyzers.flexible_analyzer',
+                'src.analyzers.simple_pattern_analyzer',
+                'src.analyzers.kelly_criterion',
+                'src.analyzers.backtesting',
+                'src.clients.news.client',
+                'src.clients.news.models',
+                'src.clients.polymarket.client',
+                'src.clients.polymarket.models',
+                'src.config.settings',
+                'src.console.display',
+                'src.console.chat',
+                'src.utils.cache',
+                'src.utils.rate_limiter',
+                'src.utils.prediction_tracker',
+                'src.utils.market_filters',
+                'src.utils.logger'
+            ]
+            
+            reloaded_count = 0
+            for module_name in modules_to_reload:
+                try:
+                    if module_name in sys.modules:
+                        importlib.reload(sys.modules[module_name])
+                        reloaded_count += 1
+                except Exception as e:
+                    self.display.print_warning(f"Failed to reload {module_name}: {e}")
                 
         # Reinitialize components with reloaded modules
         try:
+            # Reimport classes after reload
+            from src.analyzers.market_analyzer import MarketAnalyzer
+            from src.analyzers.news_correlator import NewsCorrelator
+            from src.analyzers.market_researcher import MarketResearcher
+            from src.console.display import DisplayManager
+            
+            # Create new instances
             self.market_analyzer = MarketAnalyzer()
             self.news_correlator = NewsCorrelator()
+            self.market_researcher = MarketResearcher()
+            self.display = DisplayManager()
             
-            # Reset global instances  
+            # Reset global instances and singletons
             import src.utils.market_filters
             importlib.reload(src.utils.market_filters)
             
-            self.display.print_success(f"Reloaded {reloaded_count} modules")
+            # Force reload of settings
+            import src.config.settings
+            importlib.reload(src.config.settings)
+            from src.config.settings import settings
+            
+            self.display.print_success(f"Reloaded {reloaded_count} modules and reinitialized all components")
             
         except Exception as e:
             self.display.print_error(f"Error reinitializing components: {e}")
