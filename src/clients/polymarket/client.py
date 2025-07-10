@@ -173,7 +173,7 @@ class PolymarketClient:
             # Small delay to respect rate limits
             await asyncio.sleep(0.1)
             
-        logger.info(f"Fetched {len(all_markets)} active markets before filtering")
+        logger.debug(f"Fetched {len(all_markets)} active markets before filtering")
         
         # Apply advanced filtering
         from src.utils.market_filters import market_filter
@@ -182,8 +182,8 @@ class PolymarketClient:
         # Return up to max_markets after filtering
         final_markets = filtered_markets[:max_markets]
         
-        logger.info(f"Returning {len(final_markets)} markets after filtering and limiting")
-        logger.info(f"Filter summary: {market_filter.get_filter_summary()}")
+        logger.debug(f"Returning {len(final_markets)} markets after filtering and limiting")
+        logger.debug(f"Filter summary: {market_filter.get_filter_summary()}")
         
         return final_markets
     
@@ -243,7 +243,7 @@ class PolymarketClient:
             from src.utils.market_filters import market_filter
             filtered_markets = market_filter.filter_markets(clob_markets[:max_markets])
             
-            logger.info(f"Fetched {len(gamma_markets)} gamma markets, returning {len(filtered_markets)} after filtering")
+            logger.debug(f"Fetched {len(gamma_markets)} gamma markets, returning {len(filtered_markets)} after filtering")
             
             return filtered_markets
             

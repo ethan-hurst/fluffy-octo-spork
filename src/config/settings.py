@@ -71,7 +71,7 @@ class Settings(BaseSettings):
         description="Minimum probability spread for opportunities"
     )
     max_markets_to_analyze: int = Field(
-        default=200,
+        default=500,
         description="Maximum number of markets to analyze"
     )
     

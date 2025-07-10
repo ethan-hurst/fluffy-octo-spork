@@ -52,18 +52,18 @@ class MultiOutcomeResearcher(MarketResearcher):
             event_slug = path_parts[1].split('?')[0]
             
             # Show progress
-            print("🔍 Analyzing multi-outcome market...", flush=True)
+            # Progress is shown by parent caller
             
             # Search for related markets
             related_markets = await self._find_related_markets(event_slug)
         
             if not related_markets:
-                print("❌ No related markets found, treating as single market", flush=True)
+                logger.debug("No related markets found, treating as single market")
                 # Fall back to single market research without multi-outcome check
                 return await self._research_single_market(url)
             
             # Analyze as multi-outcome
-            print(f"📊 Processing {len(related_markets)} related markets...", flush=True)
+            logger.debug(f"Processing {len(related_markets)} related markets")
             multi_market = self._create_multi_outcome_market(related_markets)
             analysis = self._analyze_multi_outcome(multi_market)
             
@@ -150,7 +150,7 @@ class MultiOutcomeResearcher(MarketResearcher):
             else:
                 search_term = base_terms[0] if base_terms else event_slug.replace('-', ' ')
             
-            print(f"🔎 Searching for: {search_term}", flush=True)
+            logger.debug(f"Searching for: {search_term}")
             
             # Just do one search with the most relevant term
             response = await client.get(

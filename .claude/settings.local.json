@@ -42,7 +42,9 @@
       "Bash(git push:*)",
       "WebFetch(domain:docs.polymarket.com)",
       "WebFetch(domain:github.com)",
-      "WebFetch(domain:raw.githubusercontent.com)"
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "Bash(# Move debug scripts\nmv debug_*.py check_*.py test_*.py trace_*.py scripts/debug/ 2>/dev/null || true\n\n# Move analysis scripts  \nmv analyze_*.py find_*.py search_*.py scripts/analysis/ 2>/dev/null || true\n\n# Move example/demo scripts\nmv demo_*.py scripts/examples/ 2>/dev/null || true\n\n# Move documentation\nmv *_GUIDE.md *_FIX*.md docs/guides/ 2>/dev/null || true\n\n# Move other utility scripts\nmv run_*.py manual_*.py simple_test.py quick_check.py enhanced_market_researcher.py market_researcher.py direct_opportunity_finder.py investigate_market_api.py save_actual_response.py scripts/ 2>/dev/null || true\n\n# Move data files\nmv *.json *.html data/ 2>/dev/null || true\n\necho \"\"Files moved successfully!\"\")",
+      "Bash(# Move remaining analysis scripts\nmv deep_market_search.py scripts/analysis/\n\n# Move documentation files\nmv opportunities_summary.md tests_implementation_alignment_analysis.md docs/\n\n# Keep development workflow docs in root for easy access\n# main.py, pyproject.toml, README.md, LICENSE should stay in root\n\necho \"\"Cleanup complete!\"\")"
     ],
     "deny": []
   }

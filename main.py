@@ -3,14 +3,25 @@
 Main entry point for Polymarket Analyzer.
 
 Usage:
-    python main.py                    # Start interactive console
-    python main.py research <url>     # Research a specific market
-    python main.py --help            # Show help
+    python main.py                        # Start interactive console
+    python main.py --markets <number>     # Set max markets to analyze
+    python main.py research <url>         # Research a specific market
+    python main.py --help                # Show help
 """
 
 import asyncio
 import sys
+import logging
+import argparse
+import os
 from pathlib import Path
+
+# Configure logging before importing anything else
+logging.basicConfig(level=logging.WARNING)
+logging.getLogger("httpx").setLevel(logging.WARNING)
+logging.getLogger("src.utils.market_filters").setLevel(logging.WARNING)
+logging.getLogger("src.clients.news.client").setLevel(logging.WARNING)
+logging.getLogger("src.clients.polymarket.client").setLevel(logging.WARNING)
 
 # Add src to Python path
 sys.path.insert(0, str(Path(__file__).parent / "src"))
@@ -173,12 +184,14 @@ def show_help():
 Polymarket Analyzer - Command Line Tool
 
 Usage:
-    python main.py                    Start interactive console
-    python main.py research <url>     Research a specific Polymarket URL
-    python main.py --help            Show this help message
+    python main.py                        Start interactive console
+    python main.py --markets <number>     Set max markets to analyze (default: 500)
+    python main.py research <url>         Research a specific Polymarket URL
+    python main.py --help                Show this help message
 
 Examples:
-    python main.py
+    python main.py                        # Start with default settings
+    python main.py --markets 1000         # Analyze up to 1000 markets
     python main.py research https://polymarket.com/event/bitcoin-150k-2025
     
 Interactive Commands:
@@ -195,29 +208,46 @@ Interactive Commands:
 
 async def main():
     """Main entry point with command-line argument handling."""
-    if len(sys.argv) > 1:
-        command = sys.argv[1].lower()
-        
-        if command in ['--help', '-h', 'help']:
-            show_help()
-            return 0
-            
-        elif command == 'research':
-            if len(sys.argv) < 3:
-                print("Error: Please provide a Polymarket URL")
-                print("Usage: python main.py research <url>")
-                return 1
-            
-            # Join remaining args in case URL has spaces
-            url = ' '.join(sys.argv[2:])
-            return await research_market(url)
-            
-        else:
-            print(f"Unknown command: {command}")
-            print("Use 'python main.py --help' for usage information")
-            return 1
+    parser = argparse.ArgumentParser(
+        description="Polymarket Analyzer - Find high-value prediction market opportunities",
+        add_help=False  # We'll handle help ourselves
+    )
     
-    # No arguments - start interactive console
+    parser.add_argument('--help', '-h', action='store_true', help='Show help message')
+    parser.add_argument('--markets', '-m', type=int, metavar='NUMBER',
+                       help='Maximum number of markets to analyze (default: from settings)')
+    parser.add_argument('command', nargs='?', help='Command to run (research, etc.)')
+    parser.add_argument('args', nargs='*', help='Command arguments')
+    
+    args = parser.parse_args()
+    
+    # Handle help
+    if args.help or (args.command and args.command.lower() == 'help'):
+        show_help()
+        return 0
+    
+    # Set market limit if provided
+    if args.markets:
+        os.environ['MAX_MARKETS_TO_ANALYZE'] = str(args.markets)
+        print(f"✅ Market limit set to {args.markets}")
+    
+    # Handle research command
+    if args.command and args.command.lower() == 'research':
+        if not args.args:
+            print("Error: Please provide a Polymarket URL")
+            print("Usage: python main.py research <url>")
+            return 1
+        
+        url = ' '.join(args.args)
+        return await research_market(url)
+    
+    # Handle unknown commands
+    if args.command:
+        print(f"Unknown command: {args.command}")
+        print("Use 'python main.py --help' for usage information")
+        return 1
+    
+    # No command - start interactive console
     app = PolymarketAnalyzerApp()
     await app.run()
     return 0

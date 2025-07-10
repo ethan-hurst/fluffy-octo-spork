@@ -151,13 +151,13 @@ class NewsClient:
                     articles=[]
                 )
             else:
-                logger.error(f"HTTP status error getting news: {e}")
+                logger.debug(f"HTTP status error getting news: {e}")
                 raise
         except httpx.HTTPError as e:
-            logger.error(f"HTTP error getting news: {e}")
+            logger.debug(f"HTTP error getting news: {e}")
             raise
         except Exception as e:
-            logger.error(f"Error getting news: {e}")
+            logger.debug(f"Error getting news: {e}")
             raise
             
     async def get_relevant_news(
@@ -210,10 +210,10 @@ class NewsClient:
                     logger.warning(f"Rate limit hit for query '{query}'. Skipping remaining queries.")
                     break  # Stop trying more queries
                 else:
-                    logger.error(f"HTTP error fetching news for query '{query}': {e}")
+                    logger.debug(f"HTTP error fetching news for query '{query}': {e}")
                     continue
             except Exception as e:
-                logger.error(f"Error fetching news for query '{query}': {e}")
+                logger.debug(f"Error fetching news for query '{query}': {e}")
                 continue
                 
         # Remove duplicates by URL and sort by publication date
@@ -260,8 +260,8 @@ class NewsClient:
             if e.response.status_code == 429:
                 logger.warning("Rate limit hit fetching breaking news. Returning empty list.")
             else:
-                logger.error(f"HTTP error fetching breaking news: {e}")
+                logger.debug(f"HTTP error fetching breaking news: {e}")
             return []
         except Exception as e:
-            logger.error(f"Error fetching breaking news: {e}")
+            logger.debug(f"Error fetching breaking news: {e}")
             return []

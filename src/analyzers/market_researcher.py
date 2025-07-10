@@ -96,7 +96,7 @@ class MarketResearcher:
                                 if (slug and slug.lower() in market_slug.lower()) or \
                                    (condition_id and condition_id == market_condition_id):
                                     found_market = market_data
-                                    logger.info(f"Found market in CLOB API: {market_data.get('question')}")
+                                    logger.debug(f"Found market in CLOB API: {market_data.get('question')}")
                                     break
                             
                             next_cursor = data.get('next_cursor')
@@ -115,13 +115,13 @@ class MarketResearcher:
                         markets = response.json()
                         if markets and len(markets) > 0:
                             found_market = markets[0]
-                            logger.info(f"Found market in Gamma API: {found_market.get('question')}")
+                            logger.debug(f"Found market in Gamma API: {found_market.get('question')}")
                 
                 # If not found by slug, try search parameter
                 if not found_market and slug:
                     # Extract key terms from slug for search
                     search_terms = slug.replace('-', ' ')
-                    logger.info(f"Trying search with terms: {search_terms}")
+                    logger.debug(f"Trying search with terms: {search_terms}")
                     
                     response = await client.get(
                         f"{self.gamma_api}/markets",
@@ -138,7 +138,7 @@ class MarketResearcher:
                         for market_data in search_results:
                             if self._check_market_match(market_data, slug, condition_id):
                                 found_market = market_data
-                                logger.info(f"Found market via search: {market_data.get('question')}")
+                                logger.debug(f"Found market via search: {market_data.get('question')}")
                                 break
                 
                 # If still not found, try browsing active markets
@@ -453,7 +453,7 @@ class MarketResearcher:
             
             if not market:
                 # Try web scraping as fallback
-                logger.info(f"Market not found via API, attempting web scrape for: {url}")
+                logger.debug(f"Market not found via API, attempting web scrape for: {url}")
                 scraped_data = await self._scrape_market_page(url)
             
                 if scraped_data:
@@ -520,7 +520,7 @@ class MarketResearcher:
                     logger.warning(f"Failed to fetch page: {response.status_code}")
                     return None
                 
-                logger.info(f"Got response: {response.status_code}, length: {len(response.text)}")
+                logger.debug(f"Got response: {response.status_code}, length: {len(response.text)}")
                 
                 # Check if it's a 404 page
                 if "<title>404" in response.text or "Page not found" in response.text:
@@ -544,17 +544,17 @@ class MarketResearcher:
                     match = re.search(r'/market/(0x[0-9a-f]+)', fc_frame_meta['content'])
                     if match:
                         condition_id = match.group(1)
-                        logger.info(f"Found condition ID from meta tag: {condition_id}")
+                        logger.debug(f"Found condition ID from meta tag: {condition_id}")
                 
                 # Method 2: If BeautifulSoup fails, use regex directly on HTML
                 if not condition_id:
                     # Check if fc:frame exists at all
                     if 'fc:frame' in response.text:
-                        logger.info("Found fc:frame in HTML, trying regex...")
+                        logger.debug("Found fc:frame in HTML, trying regex...")
                         match = re.search(r'property="fc:frame:image"\s+content="[^"]*?/market/(0x[0-9a-f]+)', response.text)
                         if match:
                             condition_id = match.group(1)
-                            logger.info(f"Found condition ID via regex: {condition_id}")
+                            logger.debug(f"Found condition ID via regex: {condition_id}")
                         else:
                             logger.warning("fc:frame found but regex failed")
                     else:
@@ -568,7 +568,7 @@ class MarketResearcher:
                 
                 # If we found a condition ID, try to fetch from CLOB API
                 if condition_id:
-                    logger.info(f"Attempting to fetch market data from CLOB API with condition ID: {condition_id}")
+                    logger.debug(f"Attempting to fetch market data from CLOB API with condition ID: {condition_id}")
                     
                     # Try CLOB API with condition ID
                     clob_response = await client.get(

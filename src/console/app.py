@@ -183,17 +183,28 @@ class PolymarketAnalyzerApp:
         """Run market analysis."""
         # Show current filters
         from src.utils.market_filters import market_filter
+        from rich.progress import Progress, SpinnerColumn, TextColumn, TimeElapsedColumn
+        
         filter_summary = market_filter.get_filter_summary()
+        
+        # Add high confidence to filter summary if active
+        if self.high_confidence_only:
+            filter_summary = f"{filter_summary} | High Confidence Mode ACTIVE"
         
         self.display.print_info("Starting market analysis...")
         self.display.print_info(f"Filters: {filter_summary}")
         
-        with self.display.create_progress("Analyzing markets") as progress:
-            task = progress.add_task("Fetching data...", total=None)
+        with Progress(
+            SpinnerColumn(),
+            TextColumn("[progress.description]{task.description}"),
+            TimeElapsedColumn(),
+            transient=True,
+        ) as progress:
+            task = progress.add_task("🔍 Searching for opportunities...", total=None)
             
             try:
                 # Fetch markets
-                progress.update(task, description="Fetching Polymarket markets...")
+                progress.update(task, description="📊 Fetching active markets...")
                 await rate_limiters.polymarket.acquire()
                 
                 async with PolymarketClient() as polymarket_client:
@@ -204,7 +215,7 @@ class PolymarketAnalyzerApp:
                     return
                     
                 # Get market prices
-                progress.update(task, description="Calculating market prices...")
+                progress.update(task, description=f"💹 Analyzing {len(markets)} markets...")
                 market_prices = []
                 for market in markets:
                     async with PolymarketClient() as polymarket_client:
@@ -213,14 +224,14 @@ class PolymarketAnalyzerApp:
                             market_prices.append(price)
                             
                 # Fetch news
-                progress.update(task, description="Fetching relevant news...")
+                progress.update(task, description="📰 Checking latest news...")
                 await rate_limiters.newsapi.acquire()
                 
                 async with NewsClient() as news_client:
                     news_articles = await news_client.get_relevant_news()
                     
                 # Run analysis
-                progress.update(task, description="Analyzing opportunities...")
+                progress.update(task, description="🎯 Identifying opportunities...")
                 
                 # Use high confidence analyzer if filter is active
                 if self.high_confidence_only:
@@ -237,7 +248,7 @@ class PolymarketAnalyzerApp:
                 if self.high_confidence_only:
                     self.market_analyzer.pattern_analyzer = original_analyzer
                 
-                progress.update(task, description="Analysis complete!", completed=100)
+                progress.update(task, description="✅ Analysis complete!", completed=100)
                 
             except Exception as e:
                 self.display.print_error(f"Analysis failed: {e}")
@@ -566,22 +577,29 @@ class PolymarketAnalyzerApp:
         Args:
             url: Polymarket URL to research
         """
-        self.display.print_info(f"🔍 Researching market: {url}")
+        from rich.progress import Progress, SpinnerColumn, TextColumn
         
-        try:
-            # Research the market
-            result = await self.market_researcher.research_market(url)
+        with Progress(
+            SpinnerColumn(),
+            TextColumn("[progress.description]{task.description}"),
+            transient=True,
+        ) as progress:
+            task = progress.add_task("🔍 Researching market...", total=None)
             
-            if 'error' in result:
-                self.display.print_error(result['error'])
-                return
-            
-            # Display research report
-            self._display_research_report(result)
-            
-        except Exception as e:
-            self.display.print_error(f"Research failed: {e}")
-            logger.exception("Error researching market")
+            try:
+                # Research the market
+                result = await self.market_researcher.research_market(url)
+                
+                if 'error' in result:
+                    self.display.print_error(result['error'])
+                    return
+                
+                # Display research report
+                self._display_research_report(result)
+                
+            except Exception as e:
+                self.display.print_error(f"Research failed: {e}")
+                logger.exception("Error researching market")
     
     def _display_research_report(self, report: Dict) -> None:
         """Display formatted research report."""

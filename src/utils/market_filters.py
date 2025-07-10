@@ -50,7 +50,7 @@ class MarketFilter:
         Returns:
             List[Market]: Filtered markets
         """
-        logger.info(f"Starting with {len(markets)} markets")
+        logger.debug(f"Starting with {len(markets)} markets")
         
         # Apply filters
         filtered = markets
@@ -58,24 +58,24 @@ class MarketFilter:
         # Category filter
         if self.categories:
             filtered = self._filter_by_category(filtered)
-            logger.info(f"After category filter: {len(filtered)} markets")
+            logger.debug(f"After category filter: {len(filtered)} markets")
             
         # Keyword filter
         if self.keywords:
             filtered = self._filter_by_keywords(filtered)
-            logger.info(f"After keyword filter: {len(filtered)} markets")
+            logger.debug(f"After keyword filter: {len(filtered)} markets")
             
         # Time horizon filter
         if self.time_horizon_filter or self.max_days_to_resolution or self.min_days_to_resolution:
             filtered = self._filter_by_time_horizon(filtered)
-            logger.info(f"After time filter: {len(filtered)} markets")
+            logger.debug(f"After time filter: {len(filtered)} markets")
             
         # Sort by volume if requested
         if self.sort_by_volume:
             filtered = self._sort_by_volume(filtered)
-            logger.info("Markets sorted by volume (highest first)")
+            logger.debug("Markets sorted by volume (highest first)")
             
-        logger.info(f"Final filtered result: {len(filtered)} markets")
+        logger.debug(f"Final filtered result: {len(filtered)} markets")
         return filtered
         
     def _filter_by_category(self, markets: List[Market]) -> List[Market]:
