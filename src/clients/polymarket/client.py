@@ -191,6 +191,9 @@ class PolymarketClient:
         """
         Get markets from Gamma API.
         
+        Note: The API has a hard limit of ~500 unique active markets regardless
+        of pagination attempts.
+        
         Args:
             max_markets: Maximum number of markets to return
             
@@ -201,7 +204,7 @@ class PolymarketClient:
             params = {
                 "active": "true",
                 "closed": "false",
-                "limit": max_markets * 2  # Fetch extra to filter
+                "limit": 500  # API max limit
             }
             
             # Apply rate limiting
@@ -210,40 +213,41 @@ class PolymarketClient:
             response = await self._client.get("/markets", params=params)
             response.raise_for_status()
             
-            gamma_markets = []
+            all_gamma_markets = []
             for market_data in response.json():
-                try:
-                    gamma_market = GammaMarket(**market_data)
-                    # Filter out archived or truly inactive markets
-                    if (gamma_market.active and 
-                        not gamma_market.closed and 
-                        not gamma_market.archived and
-                        gamma_market.get_total_volume() > settings.min_market_volume):
-                        # Check if market has ended
-                        if gamma_market.endDate:
-                            try:
-                                end_date = datetime.fromisoformat(gamma_market.endDate.replace('Z', '+00:00'))
-                                if end_date > datetime.now(end_date.tzinfo):
-                                    gamma_markets.append(gamma_market)
-                            except:
-                                # If date parsing fails, skip the market
-                                logger.debug(f"Failed to parse end date for {gamma_market.question[:50]}")
-                        else:
-                            # No end date, include it
-                            gamma_markets.append(gamma_market)
-                except Exception as e:
-                    logger.debug(f"Skipping invalid market: {e}")
-                    continue
+                    try:
+                        gamma_market = GammaMarket(**market_data)
+                        # Filter out archived or truly inactive markets
+                        if (gamma_market.active and 
+                            not gamma_market.closed and 
+                            not gamma_market.archived and
+                            gamma_market.get_total_volume() > settings.min_market_volume):
+                            # Check if market has ended
+                            if gamma_market.endDate:
+                                try:
+                                    end_date = datetime.fromisoformat(gamma_market.endDate.replace('Z', '+00:00'))
+                                    if end_date > datetime.now(end_date.tzinfo):
+                                        all_gamma_markets.append(gamma_market)
+                                except:
+                                    # If date parsing fails, skip the market
+                                    logger.debug(f"Failed to parse end date for {gamma_market.question[:50]}")
+                            else:
+                                # No end date, include it
+                                all_gamma_markets.append(gamma_market)
+                    except Exception as e:
+                        logger.debug(f"Skipping invalid market: {e}")
+                        continue
+                
             
             # Convert to CLOB format and sort by volume
-            clob_markets = [gm.to_clob_market() for gm in gamma_markets]
+            clob_markets = [gm.to_clob_market() for gm in all_gamma_markets]
             clob_markets.sort(key=lambda m: m.volume or 0, reverse=True)
             
             # Apply filters
             from src.utils.market_filters import market_filter
             filtered_markets = market_filter.filter_markets(clob_markets[:max_markets])
             
-            logger.debug(f"Fetched {len(gamma_markets)} gamma markets, returning {len(filtered_markets)} after filtering")
+            logger.debug(f"Fetched {len(all_gamma_markets)} gamma markets, returning {len(filtered_markets)} after filtering")
             
             return filtered_markets
             

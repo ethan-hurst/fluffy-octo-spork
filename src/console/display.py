@@ -287,6 +287,8 @@ class DisplayManager:
 [green]closing_soon[/green]         - Markets closing ≤30 days
 [green]medium_term[/green]          - Markets closing 30-90 days
 [green]long_term[/green]            - Markets closing >90 days
+[green]category <name>[/green]      - Filter by category (politics, crypto, sports, etc.)
+[green]all_categories[/green]       - Clear category filter
 [green]filter[/green]               - Show filter help & advanced options
 [green]filters[/green]              - Show current active filters
 
@@ -305,6 +307,8 @@ class DisplayManager:
 [green]quit[/green]                 - Exit application
 
 [dim]Examples:[/dim]
+[dim]  category politics      - Only analyze politics markets[/dim]
+[dim]  category crypto,sports - Analyze crypto AND sports markets[/dim]
 [dim]  closing_soon           - Filter for markets closing ≤30 days[/dim]
 [dim]  filter keywords trump  - Only analyze Trump-related markets[/dim]
 [dim]  chat 1                 - Chat about the #1 ranked opportunity[/dim]

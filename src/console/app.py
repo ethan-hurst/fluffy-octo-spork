@@ -161,6 +161,10 @@ class PolymarketAnalyzerApp:
             self._set_time_filter("long_term")
         elif cmd == "all_time":
             self._set_time_filter(None)
+        elif cmd == "category" and args:
+            self._set_category_filter(' '.join(args))
+        elif cmd == "all_categories":
+            self._set_category_filter(None)
         elif cmd == "high_confidence":
             self._set_confidence_filter(True)
         elif cmd == "all_confidence":
@@ -843,17 +847,22 @@ class PolymarketAnalyzerApp:
             
         self.display.print_info("Run 'start' to apply new filters")
         
-    def _set_category_filter(self, categories: str) -> None:
+    def _set_category_filter(self, categories: Optional[str]) -> None:
         """
         Set category filter.
         
         Args:
-            categories: Comma-separated categories
+            categories: Comma-separated categories or None to clear
         """
         from src.utils.market_filters import market_filter
         
-        market_filter.categories = market_filter._parse_comma_separated(categories)
-        self.display.print_success(f"Category filter set to: {categories}")
+        if categories:
+            market_filter.categories = market_filter._parse_comma_separated(categories)
+            self.display.print_success(f"Category filter set to: {categories}")
+        else:
+            market_filter.categories = []
+            self.display.print_success("Category filter cleared")
+            
         self.display.print_info("Run 'start' to apply new filters")
         
     def _set_keyword_filter(self, keywords: str) -> None:

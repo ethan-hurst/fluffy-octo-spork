@@ -72,7 +72,7 @@ class Settings(BaseSettings):
     )
     max_markets_to_analyze: int = Field(
         default=500,
-        description="Maximum number of markets to analyze"
+        description="Maximum number of markets to analyze (API limit ~500)"
     )
     
     # Market Selection Filters
