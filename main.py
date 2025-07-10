@@ -41,12 +41,61 @@ async def research_market(url: str):
         
     except Exception as e:
         display.print_error(f"Research failed: {e}")
+        if "--debug" in sys.argv:
+            import traceback
+            traceback.print_exc()
         return 1
+
+
+def display_multi_outcome_report(display: DisplayManager, report):
+    """Display multi-outcome market report."""
+    market = report['market']
+    analysis = report['analysis']
+    
+    # Header
+    display.console.print("\n[bold cyan]" + "="*80 + "[/bold cyan]")
+    display.console.print("[bold white]📊 MULTI-OUTCOME MARKET ANALYSIS[/bold white]")
+    display.console.print("[bold cyan]" + "="*80 + "[/bold cyan]\n")
+    
+    # Market info
+    display.console.print(f"[bold]📌 Market:[/bold] {market.title}")
+    display.console.print(f"[bold]💰 Total Volume:[/bold] ${market.total_volume:,.0f}")
+    display.console.print(f"[bold]🎯 Options:[/bold] {len(market.options)} candidates\n")
+    
+    # Top candidates
+    display.console.print("[bold]🏆 Top Candidates:[/bold]")
+    for i, opt in enumerate(analysis['top_candidates'][:5], 1):
+        display.console.print(f"  {i}. {opt['name']}: {opt['implied_probability']:.1%} (${opt['volume']:,.0f})")
+    
+    # Market efficiency
+    eff = analysis['market_efficiency']
+    display.console.print(f"\n[bold]📊 Market Efficiency:[/bold]")
+    display.console.print(f"  Total Probability: {eff['total_probability']:.1%}")
+    display.console.print(f"  Efficiency Score: {eff.get('efficiency', eff.get('efficiency_score', 0)):.1%}")
+    
+    # Arbitrage opportunities
+    if analysis['arbitrage']['opportunity_exists']:
+        display.console.print(f"\n[bold green]💎 Arbitrage Opportunity![/bold green]")
+        display.console.print(f"  Potential Profit: {analysis['arbitrage']['profit_percentage']:.1%}")
+    
+    # Trading opportunities
+    if analysis['opportunities']:
+        display.console.print(f"\n[bold]📈 Trading Opportunities:[/bold]")
+        for opp in analysis['opportunities'][:3]:
+            display.console.print(f"  • {opp['candidate']}: {opp['position']} at {opp['current_price']:.1%}")
+            display.console.print(f"    Reason: {opp['reason']}")
+    
+    display.console.print("\n[bold cyan]" + "="*80 + "[/bold cyan]\n")
 
 
 def display_research_report(display: DisplayManager, report):
     """Display formatted research report."""
     from datetime import datetime, timezone
+    
+    # Check if it's a multi-outcome market
+    if report.get('multi_outcome'):
+        display_multi_outcome_report(display, report)
+        return
     
     market = report['market']
     price = report['price']

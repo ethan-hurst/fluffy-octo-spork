@@ -585,6 +585,11 @@ class PolymarketAnalyzerApp:
     
     def _display_research_report(self, report: Dict) -> None:
         """Display formatted research report."""
+        # Check if it's a multi-outcome market
+        if report.get('multi_outcome'):
+            self._display_multi_outcome_report(report)
+            return
+            
         market = report['market']
         price = report['price']
         patterns = report['patterns']
@@ -651,6 +656,79 @@ class PolymarketAnalyzerApp:
         else:
             self.display.console.print("[yellow]⚖️ No Clear Edge[/yellow]")
             self.display.console.print("The market appears fairly priced at current levels.")
+        
+        self.display.console.print("\n[bold cyan]" + "="*80 + "[/bold cyan]\n")
+    
+    def _display_multi_outcome_report(self, report: Dict) -> None:
+        """Display multi-outcome market research report."""
+        from rich.table import Table
+        
+        market = report['market']
+        analysis = report['analysis']
+        
+        # Header
+        self.display.console.print("\n[bold cyan]" + "="*80 + "[/bold cyan]")
+        self.display.console.print("[bold white]📊 MULTI-OUTCOME MARKET ANALYSIS[/bold white]")
+        self.display.console.print("[bold cyan]" + "="*80 + "[/bold cyan]\n")
+        
+        # Market info
+        self.display.console.print(f"[bold]📌 Event:[/bold] {market.title}")
+        self.display.console.print(f"[bold]💰 Total Volume:[/bold] ${market.total_volume:,.0f}")
+        self.display.console.print(f"[bold]🎯 Options:[/bold] {len(market.options)}")
+        
+        if market.end_date:
+            days_left = (market.end_date - datetime.now(timezone.utc)).days
+            self.display.console.print(f"[bold]⏰ Time Left:[/bold] {days_left} days")
+        
+        # Market efficiency
+        efficiency = analysis['market_efficiency']
+        self.display.console.print(f"\n[bold]📊 Market Efficiency:[/bold]")
+        self.display.console.print(f"  Total Probability: {efficiency['total_probability']:.1%}")
+        self.display.console.print(f"  Efficiency Score: {efficiency['efficiency']:.1%}")
+        
+        if efficiency.get('arbitrage_possible'):
+            self.display.console.print("  [red]⚠️ Arbitrage opportunity detected![/red]")
+        
+        # Options table
+        table = Table(title="\n🎯 All Options", show_header=True, header_style="bold magenta")
+        table.add_column("Candidate/Option", style="cyan", width=30)
+        table.add_column("Price", justify="right", style="green")
+        table.add_column("Volume", justify="right", style="yellow")
+        table.add_column("Implied Prob", justify="right", style="blue")
+        
+        for option in market.options:
+            table.add_row(
+                option['name'],
+                f"{option['price']:.2%}",
+                f"${option['volume']:,.0f}",
+                f"{option['implied_probability']:.1%}"
+            )
+        
+        self.display.console.print(table)
+        
+        # Arbitrage opportunities
+        if analysis.get('arbitrage'):
+            arb = analysis['arbitrage']
+            self.display.console.print(f"\n[bold red]💎 ARBITRAGE OPPORTUNITY:[/bold red]")
+            self.display.console.print(f"  Type: {arb['type']}")
+            self.display.console.print(f"  Cost: ${arb['total_cost']:.2f}")
+            self.display.console.print(f"  Guaranteed Return: ${arb['guaranteed_return']:.2f}")
+            self.display.console.print(f"  Profit: ${arb['profit']:.2f} ({arb['profit_percentage']:.1f}%)")
+        
+        # Trading opportunities
+        if analysis.get('opportunities'):
+            self.display.console.print(f"\n[bold yellow]💡 Trading Opportunities:[/bold yellow]")
+            for opp in analysis['opportunities'][:3]:  # Show top 3
+                self.display.console.print(f"\n  • {opp['candidate']} - {opp['position']}")
+                self.display.console.print(f"    Reason: {opp['reason']}")
+                self.display.console.print(f"    Current: {opp['current_price']:.2%} → Target: {opp['target_price']:.2%}")
+                self.display.console.print(f"    Confidence: {opp['confidence']:.0%}")
+        
+        # Long shots
+        if analysis.get('long_shots'):
+            self.display.console.print(f"\n[bold]🎲 Long Shots (under 10%):[/bold]")
+            for shot in analysis['long_shots']:
+                self.display.console.print(f"  • {shot['name']}: {shot['price']:.1%} (${shot['volume']:,.0f} volume)")
         
         self.display.console.print("\n[bold cyan]" + "="*80 + "[/bold cyan]\n")
         
